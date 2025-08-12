@@ -19,7 +19,7 @@ export const MODELS: Record<SupportedModelId, { name: string }> = {
 };
 
 export function ModelSelector({
-  value = "gemini-2.5-pro",
+  value = "gemini-2.0-flash-exp",
   onChange,
   className,
 }: {

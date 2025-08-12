@@ -19,7 +19,7 @@ const queryClient = new QueryClient();
 export default function Home() {
   const [prompt, setPrompt] = useState("");
   const [framework, setFramework] = useState("nextjs");
-  const [model, setModel] = useState("gemini-2.5-pro");
+  const [model, setModel] = useState("gemini-2.0-flash-exp");
   const [isLoading, setIsLoading] = useState(false);
   const router = useRouter();
 

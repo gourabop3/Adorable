@@ -43,7 +43,7 @@ export default async function NewAppRedirectPage({
   const { id } = await createApp({
     initialMessage: decodeURIComponent(message),
     templateId: search.template as string,
-    modelId: (search.model as string) || "gemini-2.5-pro",
+    modelId: (search.model as string) || "gemini-2.0-flash-exp",
   });
 
   redirect(`/app/${id}`);
