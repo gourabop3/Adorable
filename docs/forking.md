@@ -38,7 +38,7 @@ Add context, web search, databases or any other tools to supercharge the AI's ca
 
 The AI model configuration is in `src/lib/model.ts`.
 
-By default, we use Claude 4 Sonnet, but GPT-5 and Claude 4 Opus also work well.
+By default, we use Gemini 2.5 Pro, but GPT-5 and Claude 4 Opus also work well.
 
 ## This is where the UI goes
 
@@ -75,6 +75,6 @@ Required environment variables:
 
 - `DATABASE_URL` - PostgreSQL connection string
 - `REDIS_URL` - Redis connection string
-- `ANTHROPIC_API_KEY` - Claude API key
+- `GOOGLE_GENERATIVE_AI_API_KEY` - Google Gemini API key
 - `FREESTYLE_API_KEY` - Freestyle platform key
 - Stack Auth variables (see README.md)

@@ -49,13 +49,13 @@ export type { Agent } from "@mastra/core/agent";
  *
  * // Create your own custom agent
  * import { Agent } from "@mastra/core/agent";
- * import { anthropic } from "@ai-sdk/anthropic";
+ * import { google } from "@ai-sdk/google";
  * import { Memory } from "@mastra/memory";
  * import { PostgresStore, PgVector } from "@mastra/pg";
  *
  * const myCustomAgent = new Agent({
  *   name: "MyCustomAgent",
- *   model: anthropic("claude-3-5-sonnet-20241022"),
+ *   model: google("gemini-2.5-pro"),
  *   instructions: "Your custom instructions here",
  *   memory: new Memory({
  *     options: { lastMessages: 1000 },
