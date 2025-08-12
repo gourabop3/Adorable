@@ -132,7 +132,7 @@ export async function setStream(
   }
 
   await redisPublisher.set(`app:${appId}:stream-state`, "running", {
-    EX: 15,
+    EX: 30,
   });
 
   const resumableStream = await streamContext.createNewResumableStream(
@@ -194,7 +194,7 @@ export async function setupAbortCallback(
  */
 export async function updateKeepAlive(appId: string): Promise<void> {
   await redisPublisher.set(`app:${appId}:stream-state`, "running", {
-    EX: 15,
+    EX: 30,
   });
 }
 
@@ -251,7 +251,7 @@ export async function sendMessageWithStreaming(
       maxRetries: 0,
       maxOutputTokens: 8000,
       async onChunk() {
-        if (Date.now() - lastKeepAlive > 5000) {
+        if (Date.now() - lastKeepAlive > 3000) {
           lastKeepAlive = Date.now();
           await updateKeepAlive(appId);
         }

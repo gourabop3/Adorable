@@ -34,6 +34,15 @@ export async function POST(req: NextRequest) {
     return new Response("App not found", { status: 404 });
   }
 
+  // Request de-duplication (short TTL)
+  const requestId = req.headers.get("x-request-id") || crypto.randomUUID();
+  const cacheKey = `request:${appId}:${requestId}`;
+  const existingRequest = await redisPublisher.get(cacheKey);
+  if (existingRequest === "processing") {
+    return new Response("Request already being processed", { status: 409 });
+  }
+  await redisPublisher.set(cacheKey, "processing", { EX: 10 });
+
   const { messages }: { messages: UIMessage[] } = await req.json();
 
   const { mcpEphemeralUrl, fs } = await freestyle.requestDevServer({
