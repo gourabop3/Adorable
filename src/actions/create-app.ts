@@ -5,8 +5,10 @@ import { appsTable, appUsers } from "@/db/schema";
 import { db } from "@/db/schema";
 import { freestyle } from "@/lib/freestyle";
 import { templates } from "@/lib/templates";
-import { memory, builderAgent } from "@/mastra/agents/builder";
+import { memory, builderAgent, createBuilderAgentWithModel } from "@/mastra/agents/builder";
 import { sendMessageWithStreaming } from "@/lib/internal/stream-manager";
+import { google } from "@ai-sdk/google";
+import { openai } from "@ai-sdk/openai";
 
 export async function createApp({
   initialMessage,
@@ -96,8 +98,14 @@ export async function createApp({
   if (initialMessage) {
     console.time("send initial message");
 
-    // Send the initial message using the same infrastructure as the chat API
-    await sendMessageWithStreaming(builderAgent, app.id, mcpEphemeralUrl, fs, {
+    // Use selected model if provided, otherwise default builder agent
+    const agentToUse = modelId
+      ? createBuilderAgentWithModel(
+          modelId.startsWith("gpt") ? openai(modelId) : google(modelId)
+        )
+      : builderAgent;
+
+    await sendMessageWithStreaming(agentToUse, app.id, mcpEphemeralUrl, fs, {
       id: crypto.randomUUID(),
       parts: [
         {
