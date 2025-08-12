@@ -31,3 +31,16 @@ export const builderAgent = new Agent({
     update_todo_list: todoTool,
   },
 });
+
+export function createBuilderAgentWithModel(model: unknown) {
+  return new Agent({
+    name: "BuilderAgent",
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    model: model as any,
+    instructions: SYSTEM_MESSAGE,
+    memory,
+    tools: {
+      update_todo_list: todoTool,
+    },
+  });
+}

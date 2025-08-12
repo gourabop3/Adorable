@@ -12,12 +12,14 @@ import { UserButton } from "@stackframe/stack";
 import { UserApps } from "@/components/user-apps";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { PromptInputTextareaWithTypingAnimation } from "@/components/prompt-input";
+import { ModelSelector } from "@/components/model-selector";
 
 const queryClient = new QueryClient();
 
 export default function Home() {
   const [prompt, setPrompt] = useState("");
   const [framework, setFramework] = useState("nextjs");
+  const [model, setModel] = useState("gemini-2.5-pro");
   const [isLoading, setIsLoading] = useState(false);
   const router = useRouter();
 
@@ -25,7 +27,7 @@ export default function Home() {
     setIsLoading(true);
 
     router.push(
-      `/app/new?message=${encodeURIComponent(prompt)}&template=${framework}`
+      `/app/new?message=${encodeURIComponent(prompt)}&template=${framework}&model=${model}`
     );
   };
 
@@ -59,10 +61,10 @@ export default function Home() {
                 <div className="w-full bg-accent rounded-md relative z-10 border transition-colors">
                   <PromptInput
                     leftSlot={
-                      <FrameworkSelector
-                        value={framework}
-                        onChange={setFramework}
-                      />
+                      <div className="flex items-center gap-1">
+                        <FrameworkSelector value={framework} onChange={setFramework} />
+                        <ModelSelector value={model as any} onChange={setModel as any} />
+                      </div>
                     }
                     isLoading={isLoading}
                     value={prompt}
@@ -79,9 +81,7 @@ export default function Home() {
                         disabled={isLoading || !prompt.trim()}
                         className="h-7 text-xs"
                       >
-                        <span className="hidden sm:inline">
-                          Start Creating ⏎
-                        </span>
+                        <span className="hidden sm:inline">Start Creating ⏎</span>
                         <span className="sm:hidden">Create ⏎</span>
                       </Button>
                     </PromptInputActions>
@@ -98,9 +98,7 @@ export default function Home() {
                 <span className="block font-bold">
                   By <span className="underline">freestyle.sh</span>
                 </span>
-                <span className="text-xs">
-                  JavaScript infrastructure for AI.
-                </span>
+                <span className="text-xs">JavaScript infrastructure for AI.</span>
               </a>
             </div>
           </div>

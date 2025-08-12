@@ -11,9 +11,11 @@ import { sendMessageWithStreaming } from "@/lib/internal/stream-manager";
 export async function createApp({
   initialMessage,
   templateId,
+  modelId,
 }: {
   initialMessage?: string;
   templateId: string;
+  modelId?: string;
 }) {
   console.time("get user");
   const user = await getUser();
@@ -84,6 +86,12 @@ export async function createApp({
     resourceId: app.id,
   });
   console.timeEnd("mastra: create thread");
+
+  // Store selected model for this app
+  if (modelId) {
+    const { redisPublisher } = await import("@/lib/internal/redis");
+    await redisPublisher.set(`app:${app.id}:model`, modelId);
+  }
 
   if (initialMessage) {
     console.time("send initial message");

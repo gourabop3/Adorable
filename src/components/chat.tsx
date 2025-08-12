@@ -4,7 +4,7 @@ import Image from "next/image";
 
 import { PromptInputBasic } from "./chatinput";
 import { Markdown } from "./ui/markdown";
-import { useState } from "react";
+import { useMemo, useState } from "react";
 import { ChatContainer } from "./ui/chat-container";
 import { UIMessage } from "ai";
 import { ToolMessage } from "./tools";
@@ -34,6 +34,16 @@ export default function Chat(props: {
     id: props.appId,
     resume: props.running && chat?.state === "running",
   });
+
+  const dedupedMessages = useMemo(() => {
+    const seen = new Set<string>();
+    return (messages as any[]).filter((m) => {
+      if (!m?.id) return true;
+      if (seen.has(m.id)) return false;
+      seen.add(m.id);
+      return true;
+    });
+  }, [messages]);
 
   const [input, setInput] = useState("");
 
@@ -110,7 +120,7 @@ export default function Chat(props: {
         style={{ overflowAnchor: "auto" }}
       >
         <ChatContainer autoScroll>
-          {messages.map((message: any) => (
+          {dedupedMessages.map((message: any) => (
             <MessageBody key={message.id} message={message} />
           ))}
         </ChatContainer>
