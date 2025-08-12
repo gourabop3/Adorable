@@ -7,10 +7,19 @@ import {
   pgEnum,
 } from "drizzle-orm/pg-core";
 import { drizzle } from "drizzle-orm/node-postgres";
+import { Pool } from "pg";
 
 import type { UIMessage } from "ai";
 
-export const db = drizzle(process.env.DATABASE_URL!);
+const connectionString = process.env.DATABASE_URL!;
+const useSSL = process.env.DATABASE_SSL !== "false"; // default true
+
+const pool = new Pool({
+  connectionString,
+  ssl: useSSL ? { rejectUnauthorized: false } : undefined,
+});
+
+export const db = drizzle(pool);
 
 export const appsTable = pgTable("apps", {
   id: uuid("id").primaryKey().defaultRandom(),

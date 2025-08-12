@@ -51,6 +51,8 @@ For guidance on building app builders with AI, see the [Freestyle guide on Build
    ```
    # Database
    DATABASE_URL=postgresql://username:password@localhost:5432/adorable
+   # For Render/Neon/managed Postgres with SSL, set to true (default). Set to false only for local dev.
+   DATABASE_SSL=true
 
    # Google AI (Gemini)
    GOOGLE_GENERATIVE_AI_API_KEY=your_google_generative_ai_api_key
