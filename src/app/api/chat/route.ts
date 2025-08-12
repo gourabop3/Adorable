@@ -19,7 +19,7 @@ import { NextRequest } from "next/server";
 import { redisPublisher } from "@/lib/internal/redis";
 import { google } from "@ai-sdk/google";
 import { openai } from "@ai-sdk/openai";
-import { AIService } from "@/lib/internal/ai-service";
+
 
 export async function POST(req: NextRequest) {
   console.log("creating new chat stream");
@@ -48,34 +48,6 @@ export async function POST(req: NextRequest) {
 
   const agent = createBuilderAgentWithModel(modelProvider);
 
-  // Simple/direct streaming mode: bypass resumable/Redis and return the UI stream directly
-  if (process.env.SIMPLE_STREAMING === "true") {
-    const aiResponse = await AIService.sendMessage(
-      agent,
-      appId,
-      mcpEphemeralUrl,
-      fs,
-      messages.at(-1)!
-    );
-
-    const body = aiResponse.stream.toUIMessageStreamResponse().body;
-    if (!body) {
-      return new Response("Failed to create stream body", { status: 500 });
-    }
-
-    return new Response(body, {
-      headers: {
-        "content-type": "text/event-stream",
-        "cache-control": "no-cache",
-        connection: "keep-alive",
-        "x-vercel-ai-ui-message-stream": "v1",
-        "x-accel-buffering": "no",
-      },
-      status: 200,
-    });
-  }
-
-  // Default resumable streaming path (Redis-backed)
   // Check if a stream is already running and stop it if necessary
   if (await isStreamRunning(appId)) {
     console.log("Stopping previous stream for appId:", appId);
