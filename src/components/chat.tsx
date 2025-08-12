@@ -4,7 +4,7 @@ import Image from "next/image";
 
 import { PromptInputBasic } from "./chatinput";
 import { Markdown } from "./ui/markdown";
-import { useMemo, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { ChatContainer } from "./ui/chat-container";
 import { UIMessage } from "ai";
 import { ToolMessage } from "./tools";
@@ -25,14 +25,26 @@ export default function Chat(props: {
     queryFn: async () => {
       return chatState(props.appId);
     },
-    refetchInterval: 1000,
-    refetchOnWindowFocus: true,
+    refetchInterval: 2000,
+    refetchOnWindowFocus: false,
+    staleTime: 1000,
+    refetchOnMount: false,
+    refetchOnReconnect: false,
+    gcTime: 5000,
   });
+
+  const [debouncedRunning, setDebouncedRunning] = useState(false);
+  useEffect(() => {
+    const timer = setTimeout(() => {
+      setDebouncedRunning(props.running && chat?.state === "running");
+    }, 300);
+    return () => clearTimeout(timer);
+  }, [props.running, chat?.state]);
 
   const { messages, sendMessage } = useChatSafe({
     messages: props.initialMessages,
     id: props.appId,
-    resume: props.running && chat?.state === "running",
+    resume: debouncedRunning,
   });
 
   const dedupedMessages = useMemo(() => {
@@ -51,22 +63,33 @@ export default function Chat(props: {
     if (e?.preventDefault) {
       e.preventDefault();
     }
-    sendMessage(
-      {
-        parts: [
-          {
-            type: "text",
-            text: input,
-          },
-        ],
-      },
-      {
-        headers: {
-          "Adorable-App-Id": props.appId,
-        },
-      }
-    );
+
+    if (!input.trim() || debouncedRunning) {
+      return;
+    }
+
+    const messageText = input.trim();
     setInput("");
+
+    setTimeout(() => {
+      const messageId = crypto.randomUUID();
+      sendMessage(
+        {
+          id: messageId,
+          parts: [
+            {
+              type: "text",
+              text: messageText,
+            },
+          ],
+        },
+        {
+          headers: {
+            "Adorable-App-Id": props.appId,
+          },
+        }
+      );
+    }, 100);
   };
 
   const onSubmitWithImages = (text: string, images: CompressedImage[]) => {
@@ -134,7 +157,7 @@ export default function Chat(props: {
           }}
           onSubmit={onSubmit}
           onSubmitWithImages={onSubmitWithImages}
-          isGenerating={props.isLoading || chat?.state === "running"}
+          isGenerating={props.isLoading || debouncedRunning}
         />
       </div>
     </div>
@@ -188,34 +211,7 @@ function MessageBody({ message }: { message: any }) {
           }
 
           if (part.type.startsWith("tool-")) {
-            // if (
-            //   part.toolInvocation.state === "result" &&
-            //   part.toolInvocation.result.isError
-            // ) {
-            //   return (
-            //     <div
-            //       key={index}
-            //       className="border-red-500 border text-sm text-red-800 rounded bg-red-100 px-2 py-1 mt-2 mb-4"
-            //     >
-            //       {part.toolInvocation.result?.content?.map(
-            //         (content: { type: "text"; text: string }, i: number) => (
-            //           <div key={i}>{content.text}</div>
-            //         )
-            //       )}
-            //       {/* Unexpectedly failed while using tool{" "}
-            //       {part.toolInvocation.toolName}. Please try again. again. */}
-            //     </div>
-            //   );
-            // }
-
-            // if (
-            //   message.parts!.length - 1 == index &&
-            //   part.toolInvocation.state !== "result"
-            // ) {
             return <ToolMessage key={index} toolInvocation={part} />;
-            // } else {
-            //   return undefined;
-            // }
           }
         })}
       </div>
