@@ -76,7 +76,7 @@ export async function POST(req: NextRequest) {
   const toolsets = await mcp.getToolsets();
 
   const selectedModelId =
-    (await redisPublisher.get(`app:${appId}:model`)) || "gemini-2.5-pro";
+    (await redisPublisher.get(`app:${appId}:model`)) || "gemini-2.0-flash-exp";
   const modelProvider = selectedModelId.startsWith("gpt")
     ? openai(selectedModelId)
     : google(selectedModelId);
