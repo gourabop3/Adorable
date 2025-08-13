@@ -158,15 +158,16 @@ function HomeContent() {
     <QueryClientProvider client={queryClient}>
       <main className="min-h-screen p-4 relative">
         <div className="flex w-full justify-between items-center">
-          <h1 className="text-lg font-bold flex-1 sm:w-80">
-            <a href="https://www.freestyle.sh">freestyle.sh</a>
+          <h1 className="text-sm sm:text-lg font-bold flex-1 sm:w-80">
+            <a href="https://www.freestyle.sh" className="hover:underline">freestyle.sh</a>
           </h1>
           <Image
             className="dark:invert mx-2"
             src={LogoSvg}
             alt="Adorable Logo"
-            width={36}
-            height={36}
+            width={32}
+            height={32}
+            className="w-8 h-8 sm:w-9 sm:h-9"
           />
           <div className="flex items-center gap-2 flex-1 sm:w-80 justify-end">
             <UserButtonWithBilling />
@@ -182,20 +183,20 @@ function HomeContent() {
         )}
         
         <div>
-          <div className="w-full max-w-lg px-4 sm:px-0 mx-auto flex flex-col items-center mt-16 sm:mt-24 md:mt-32 col-start-1 col-end-1 row-start-1 row-end-1 z-10">
-            <p className="text-neutral-600 text-center mb-6 text-3xl sm:text-4xl md:text-5xl font-bold">
+          <div className="w-full max-w-lg px-4 sm:px-0 mx-auto flex flex-col items-center mt-12 sm:mt-16 md:mt-24 lg:mt-32 col-start-1 col-end-1 row-start-1 row-end-1 z-10">
+            <p className="text-neutral-600 text-center mb-4 sm:mb-6 text-2xl sm:text-3xl md:text-4xl lg:text-5xl font-bold">
               Let AI Cook
             </p>
 
             {/* Credit Balance Banner */}
             <CreditBalanceBanner />
 
-            <div className="w-full relative my-5">
+            <div className="w-full relative my-4 sm:my-5">
               <div className="relative w-full max-w-full overflow-hidden">
                 <div className="w-full bg-accent rounded-md relative z-10 border transition-colors">
                   <PromptInput
                     leftSlot={
-                      <div className="flex items-center gap-1">
+                      <div className="flex flex-col sm:flex-row items-start sm:items-center gap-2 sm:gap-1 w-full sm:w-auto">
                         <FrameworkSelector value={framework} onChange={setFramework} />
                         <ModelSelector value={model as any} onChange={setModel as any} />
                       </div>
@@ -204,7 +205,7 @@ function HomeContent() {
                     value={prompt}
                     onValueChange={setPrompt}
                     onSubmit={handleSubmit}
-                    className="relative z-10 border-none bg-transparent shadow-none focus-within:border-gray-400 focus-within:ring-1 focus-within:ring-gray-200 transition-all duration-200 ease-in-out "
+                    className="relative z-10 border-none bg-transparent shadow-none focus-within:border-gray-400 focus-within:ring-1 focus-within:ring-gray-200 transition-all duration-200 ease-in-out"
                   >
                     <PromptInputTextareaWithTypingAnimation />
                     <PromptInputActions>
@@ -213,10 +214,10 @@ function HomeContent() {
                         size="sm"
                         onClick={handleSubmit}
                         disabled={isLoading || !prompt.trim()}
-                        className="h-7 text-xs"
+                        className="h-8 sm:h-7 text-xs w-full sm:w-auto"
                       >
                         <span className="hidden sm:inline">Start Creating ⏎</span>
-                        <span className="sm:hidden">Create ⏎</span>
+                        <span className="sm:hidden">Create App ⏎</span>
                       </Button>
                     </PromptInputActions>
                   </PromptInput>
@@ -224,12 +225,12 @@ function HomeContent() {
               </div>
             </div>
             <Examples setPrompt={setPrompt} />
-            <div className="mt-8 mb-16">
+            <div className="mt-6 sm:mt-8 mb-12 sm:mb-16">
               <a
                 href="https://freestyle.sh"
-                className="border rounded-md px-4 py-2 mt-4 text-sm font-semibold transition-colors duration-200 ease-in-out cursor-pointer w-full max-w-72 text-center block"
+                className="border rounded-md px-3 sm:px-4 py-2 mt-4 text-sm font-semibold transition-colors duration-200 ease-in-out cursor-pointer w-full max-w-72 text-center block hover:bg-gray-50 dark:hover:bg-gray-800"
               >
-                <span className="block font-bold">
+                <span className="block font-bold text-sm sm:text-base">
                   By <span className="underline">freestyle.sh</span>
                 </span>
                 <span className="text-xs">JavaScript infrastructure for AI.</span>
@@ -256,7 +257,7 @@ export default function Home() {
 function Examples({ setPrompt }: { setPrompt: (text: string) => void }) {
   return (
     <div className="mt-2">
-      <div className="flex flex-wrap justify-center gap-2 px-2">
+      <div className="flex flex-col sm:flex-row flex-wrap justify-center gap-2 px-2">
         <ExampleButton
           text="Dog Food Marketplace"
           promptText="Build a dog food marketplace where users can browse and purchase premium dog food."

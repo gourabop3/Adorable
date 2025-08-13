@@ -70,7 +70,7 @@ export function CreditHistory({ onClose }: CreditHistoryProps) {
 
   return (
     <Dialog open={true} onOpenChange={onClose}>
-      <DialogContent className="sm:max-w-2xl max-h-[80vh] overflow-hidden flex flex-col">
+      <DialogContent className="sm:max-w-2xl max-h-[90vh] overflow-hidden flex flex-col">
         <DialogHeader>
           <DialogTitle className="text-center flex items-center justify-center gap-2">
             <Coins className="h-6 w-6 text-yellow-500" />
@@ -90,18 +90,18 @@ export function CreditHistory({ onClose }: CreditHistoryProps) {
               <p className="text-sm">Your credit usage and purchases will appear here</p>
             </div>
           ) : (
-            <div className="space-y-3">
+            <div className="space-y-3 p-2">
               {transactions.map((transaction) => (
                 <div
                   key={transaction.id}
-                  className="flex items-center justify-between p-3 border rounded-lg hover:bg-gray-50 dark:hover:bg-gray-800 transition-colors"
+                  className="flex flex-col sm:flex-row sm:items-center justify-between p-3 border rounded-lg hover:bg-gray-50 dark:hover:bg-gray-800 transition-colors gap-2"
                 >
-                  <div className="flex items-center gap-3">
-                    <div className="flex items-center justify-center w-8 h-8 rounded-full bg-gray-100 dark:bg-gray-800">
+                  <div className="flex items-center gap-3 flex-1">
+                    <div className="flex items-center justify-center w-8 h-8 rounded-full bg-gray-100 dark:bg-gray-800 flex-shrink-0">
                       {getTransactionIcon(transaction.type, transaction.amount)}
                     </div>
-                    <div>
-                      <p className="font-medium text-sm">
+                    <div className="min-w-0 flex-1">
+                      <p className="font-medium text-sm truncate">
                         {transaction.description}
                       </p>
                       <div className="flex items-center gap-2 text-xs text-gray-500">
@@ -111,7 +111,7 @@ export function CreditHistory({ onClose }: CreditHistoryProps) {
                     </div>
                   </div>
                   
-                  <div className={`font-semibold ${getTransactionColor(transaction.type, transaction.amount)}`}>
+                  <div className={`font-semibold text-right ${getTransactionColor(transaction.type, transaction.amount)}`}>
                     {transaction.amount > 0 ? '+' : ''}{transaction.amount} credits
                   </div>
                 </div>

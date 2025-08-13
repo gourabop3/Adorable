@@ -50,16 +50,18 @@ export function CreditBalanceBanner() {
   }
 
   return (
-    <div className="w-full p-4 bg-blue-50 dark:bg-blue-950 border border-blue-200 dark:border-blue-800 rounded-lg mb-6">
-      <div className="flex items-center gap-3">
-        <Coins className="h-5 w-5 text-blue-600" />
-        <div className="flex-1">
-          <h3 className="font-semibold text-blue-800 dark:text-blue-200">
-            Credit Balance: {billing.credits} credits
-          </h3>
-          <p className="text-sm text-blue-700 dark:text-blue-300">
-            You can create {billing.credits} more apps with your current balance.
-          </p>
+    <div className="w-full p-3 sm:p-4 bg-blue-50 dark:bg-blue-950 border border-blue-200 dark:border-blue-800 rounded-lg mb-4 sm:mb-6">
+      <div className="flex flex-col sm:flex-row items-start sm:items-center gap-3">
+        <div className="flex items-center gap-2 sm:gap-3">
+          <Coins className="h-5 w-5 text-blue-600 flex-shrink-0" />
+          <div className="flex-1 min-w-0">
+            <h3 className="font-semibold text-blue-800 dark:text-blue-200 text-sm sm:text-base">
+              Credit Balance: {billing.credits} credits
+            </h3>
+            <p className="text-xs sm:text-sm text-blue-700 dark:text-blue-300">
+              You can create {billing.credits} more apps with your current balance.
+            </p>
+          </div>
         </div>
       </div>
     </div>
