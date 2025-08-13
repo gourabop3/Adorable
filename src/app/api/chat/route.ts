@@ -1,18 +1,17 @@
 import { getApp } from "@/actions/get-app";
 import { freestyle } from "@/lib/freestyle";
 import { getAppIdFromHeaders } from "@/lib/utils";
-import { MCPClient } from "@mastra/mcp";
 import { UIMessage } from "ai";
 
 // "fix" mastra mcp bug
 import { EventEmitter } from "events";
-import { getAbortCallback, setStream, stopStream } from "@/lib/streams";
+import { setStream, stopStream } from "@/lib/streams";
 EventEmitter.defaultMaxListeners = 1000;
 
 import { NextRequest } from "next/server";
 import { redisPublisher } from "@/lib/redis";
-import { MessageList } from "@mastra/core/agent";
-import { builderAgent } from "@/mastra/agents/builder";
+import { AIService } from "@/lib/internal/ai-service";
+import { createBuilderAgentWithModel } from "@/mastra/agents/builder";
 
 export async function POST(req: NextRequest) {
   console.log("creating new chat stream");
@@ -92,7 +91,7 @@ export async function POST(req: NextRequest) {
 
   const { messages }: { messages: UIMessage[] } = await req.json();
 
-  const { mcpEphemeralUrl } = await freestyle.requestDevServer({
+  const { mcpEphemeralUrl, fs } = await freestyle.requestDevServer({
     repoId: app.info.gitRepo,
   });
 
@@ -102,8 +101,10 @@ export async function POST(req: NextRequest) {
   const resumableStream = await sendMessage(
     appId,
     mcpEphemeralUrl,
+    fs,
     messages.at(-1)!,
-    selectedModel
+    selectedModel,
+    cacheKey
   );
 
   return resumableStream.response();
@@ -112,183 +113,132 @@ export async function POST(req: NextRequest) {
 export async function sendMessage(
   appId: string,
   mcpUrl: string,
+  fs: any,
   message: UIMessage,
-  modelId?: string
+  modelId?: string,
+  cacheKey?: string
 ) {
-  const mcp = new MCPClient({
-    id: crypto.randomUUID(),
-    servers: {
-      dev_server: {
-        url: new URL(mcpUrl),
-      },
-    },
-  });
-
-  const toolsets = await mcp.getToolsets();
-
-  await (
-    await builderAgent.getMemory()
-  )?.saveMessages({
-    messages: [
-      {
-        content: {
-          parts: message.parts,
-          format: 3,
-        },
-        role: "user",
-        createdAt: new Date(),
-        id: message.id,
-        threadId: appId,
-        type: "text",
-        resourceId: appId,
-      },
-    ],
-  });
-
-  const controller = new AbortController();
-  let shouldAbort = false;
-  await getAbortCallback(appId, () => {
-    shouldAbort = true;
-  });
-
-  let lastKeepAlive = Date.now();
-
-  const messageList = new MessageList({
-    resourceId: appId,
-    threadId: appId,
-  });
-
-  // Use selected model or default to builderAgent
-  const agentToUse = modelId ? createBuilderAgentWithModel(modelId) : builderAgent;
+  // Use selected model or default to gemini-2.5-pro
+  const agentToUse = modelId ? createBuilderAgentWithModel(modelId) : createBuilderAgentWithModel("gemini-2.5-pro");
   
-  const stream = await agentToUse.stream([], {
-    threadId: appId,
-    resourceId: appId,
-    maxSteps: 100,
-    maxRetries: 3, // Allow retries for better reliability
-    maxOutputTokens: 12000, // Increase token limit for better completion
-    toolsets,
-    async onChunk() {
-      if (Date.now() - lastKeepAlive > 5000) {
-        lastKeepAlive = Date.now();
-        redisPublisher.set(`app:${appId}:stream-state`, "running", {
-          EX: 30, // Increase keep-alive timeout
-        });
-      }
-    },
-    async onStepFinish(step) {
-      messageList.add(step.response.messages, "response");
-
-      // Only abort if explicitly requested, not on every step
-      if (shouldAbort) {
-        await redisPublisher.del(`app:${appId}:stream-state`);
-        controller.abort("Aborted stream after step finish");
-        const messages = messageList.drainUnsavedMessages();
-        console.log(messages);
-        await builderAgent.getMemory()?.saveMessages({
-          messages,
-        });
-      }
-    },
-    onError: async (error) => {
-      console.error("❌ Stream error:", error);
-      
-      try {
-        await mcp.disconnect();
-        await redisPublisher.del(`app:${appId}:stream-state`);
-        await redisPublisher.del(cacheKey); // Clean up request deduplication
+  const response = await AIService.sendMessage(
+    agentToUse,
+    appId,
+    mcpUrl,
+    fs,
+    message,
+    {
+      threadId: appId,
+      resourceId: appId,
+      maxSteps: 100,
+      maxRetries: 3,
+      maxOutputTokens: 12000,
+      async onChunk() {
+        // Keep-alive logic is handled by AIService
+      },
+      async onStepFinish(step) {
+        // Step finish logic is handled by AIService
+      },
+      onError: async (error) => {
+        console.error("❌ Stream error:", error);
         
-        // Enhanced error handling for quota issues
-        if (error?.message?.includes('quota') || error?.message?.includes('429') || error?.statusCode === 429) {
-          console.error("❌ Gemini API quota exceeded:", error.message);
+        try {
+          await redisPublisher.del(`app:${appId}:stream-state`);
+          if (cacheKey) {
+            await redisPublisher.del(cacheKey); // Clean up request deduplication
+          }
           
-          // Extract retry delay from error if available
-          let retryDelay = 60; // default 60 seconds
-          let quotaViolations = [];
-          
-          try {
-            if (error.responseBody) {
-              const errorData = JSON.parse(error.responseBody);
-              if (errorData.error?.details) {
-                const retryInfo = errorData.error.details.find((detail: any) => 
-                  detail['@type'] === 'type.googleapis.com/google.rpc.RetryInfo'
-                );
-                if (retryInfo?.retryDelay) {
-                  retryInfo.retryDelay.replace('s', '');
-                }
-                
-                const quotaFailure = errorData.error.details.find((detail: any) => 
-                  detail['@type'] === 'type.googleapis.com/google.rpc.QuotaFailure'
-                );
-                if (quotaFailure?.violations) {
-                  quotaViolations = quotaFailure.violations;
+          // Enhanced error handling for quota issues
+          if (error?.error?.message?.includes('quota') || error?.error?.message?.includes('429') || error?.error?.statusCode === 429) {
+            console.error("❌ Gemini API quota exceeded:", error.error.message);
+            
+            // Extract retry delay from error if available
+            let retryDelay = 60; // default 60 seconds
+            let quotaViolations = [];
+            
+            try {
+              if (error.error.responseBody) {
+                const errorData = JSON.parse(error.error.responseBody);
+                if (errorData.error?.details) {
+                  const retryInfo = errorData.error.details.find((detail: any) => 
+                    detail['@type'] === 'type.googleapis.com/google.rpc.RetryInfo'
+                  );
+                  if (retryInfo?.retryDelay) {
+                    retryInfo.retryDelay.replace('s', '');
+                  }
+                  
+                  const quotaFailure = errorData.error.details.find((detail: any) => 
+                    detail['@type'] === 'type.googleapis.com/google.rpc.QuotaFailure'
+                  );
+                  if (quotaFailure?.violations) {
+                    quotaViolations = quotaFailure.violations;
+                  }
                 }
               }
+            } catch (parseError) {
+              console.warn("Could not parse error details:", parseError);
             }
-          } catch (parseError) {
-            console.warn("Could not parse error details:", parseError);
+            
+            console.log(`⏰ Suggested retry delay: ${retryDelay} seconds`);
+            console.log("🚫 Quota violations:", quotaViolations.map((v: any) => v.quotaId).join(', '));
+            console.log("💡 To fix this:");
+            console.log("   1. Wait for quota reset (usually 1 minute for per-minute limits, 24 hours for daily limits)");
+            console.log("   2. Upgrade to a paid Google AI API plan for higher quotas");
+            console.log("   3. Implement request rate limiting in your application");
+            console.log("   4. Consider using a different model or reducing request frequency");
+          } else {
+            console.error("❌ Other streaming error:", error.error);
           }
-          
-          console.log(`⏰ Suggested retry delay: ${retryDelay} seconds`);
-          console.log("🚫 Quota violations:", quotaViolations.map((v: any) => v.quotaId).join(', '));
-          console.log("💡 To fix this:");
-          console.log("   1. Wait for quota reset (usually 1 minute for per-minute limits, 24 hours for daily limits)");
-          console.log("   2. Upgrade to a paid Google AI API plan for higher quotas");
-          console.log("   3. Implement request rate limiting in your application");
-          console.log("   4. Consider using a different model or reducing request frequency");
-        } else {
-          console.error("❌ Other streaming error:", error);
+        } catch (cleanupError) {
+          console.error("❌ Error during cleanup:", cleanupError);
         }
-      } catch (cleanupError) {
-        console.error("❌ Error during cleanup:", cleanupError);
-      }
-    },
-    onFinish: async () => {
-      await redisPublisher.del(`app:${appId}:stream-state`);
-      await redisPublisher.del(cacheKey); // Clean up request deduplication
-      
-      // Deduct 1 credit for chat usage
-      try {
-        const { getUser } = await import("@/auth/stack-auth");
-        const user = await getUser();
+      },
+      onFinish: async () => {
+        await redisPublisher.del(`app:${appId}:stream-state`);
+        if (cacheKey) {
+          await redisPublisher.del(cacheKey); // Clean up request deduplication
+        }
         
-        if (user && user.userId) {
-          const { db } = await import("@/db/schema");
-          const { users, creditTransactions } = await import("@/db/schema");
-          const { eq } = await import("drizzle-orm");
+        // Deduct 1 credit for chat usage
+        try {
+          const { getUser } = await import("@/auth/stack-auth");
+          const user = await getUser();
           
-          // Deduct 1 credit from user
-          const currentUser = await db.select().from(users).where(eq(users.id, user.userId)).limit(1);
-          if (currentUser[0]) {
-            await db.update(users)
-              .set({ 
-                credits: currentUser[0].credits - 1,
-                updatedAt: new Date()
-              })
-              .where(eq(users.id, user.userId));
+          if (user && user.userId) {
+            const { db } = await import("@/db/schema");
+            const { users, creditTransactions } = await import("@/db/schema");
+            const { eq } = await import("drizzle-orm");
+            
+            // Deduct 1 credit from user
+            const currentUser = await db.select().from(users).where(eq(users.id, user.userId)).limit(1);
+            if (currentUser[0]) {
+              await db.update(users)
+                .set({ 
+                  credits: currentUser[0].credits - 1,
+                  updatedAt: new Date()
+                })
+                .where(eq(users.id, user.userId));
+            }
+
+            // Record credit transaction
+            await db.insert(creditTransactions).values({
+              userId: user.userId,
+              amount: -1, // Negative amount for usage
+              description: `Used 1 credit for chat usage in app ${appId}`,
+              type: 'usage',
+              metadata: { appId },
+            });
+
+            console.log(`Deducted 1 credit from user ${user.userId} for chat usage`);
           }
-
-          // Record credit transaction
-          await db.insert(creditTransactions).values({
-            userId: user.userId,
-            amount: -1, // Negative amount for usage
-            description: `Used 1 credit for chat in app ${appId}`,
-            type: 'usage',
-            metadata: { appId },
-          });
-
-          console.log(`Deducted 1 credit from user ${user.userId} for chat usage`);
+        } catch (error) {
+          console.error("Error deducting credits for chat:", error);
         }
-      } catch (error) {
-        console.error("Error deducting credits for chat:", error);
-      }
-      
-      await mcp.disconnect();
-    },
-    abortSignal: controller.signal,
-  });
+      },
+    }
+  );
 
   console.log("Stream created for appId:", appId, "with prompt:", message);
 
-  return await setStream(appId, message, stream);
+  return await setStream(appId, message, response.stream);
 }
