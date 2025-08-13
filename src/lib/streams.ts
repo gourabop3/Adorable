@@ -4,7 +4,7 @@ import { StreamTextResult, UIMessage } from "ai";
 import { after } from "next/server";
 
 import { createResumableStreamContext } from "resumable-stream";
-import { redis, redisPublisher } from "./internal/redis";
+import { redis, redisPublisher } from "./redis";
 
 const streamContext = createResumableStreamContext({
   waitUntil: after,

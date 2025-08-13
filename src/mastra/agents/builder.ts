@@ -24,7 +24,7 @@ export const memory = new Memory({
 
 export const builderAgent = new Agent({
   name: "BuilderAgent",
-  model: google("gemini-2.0-flash-exp"),
+  model: google("gemini-2.5-pro"),
   instructions: SYSTEM_MESSAGE,
   memory,
   tools: {
