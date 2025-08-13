@@ -3,7 +3,7 @@
 import React, { useEffect, useState } from "react";
 import Chat from "./chat";
 import { TopBar } from "./topbar";
-import { MessageCircle, Monitor } from "lucide-react";
+import { MessageCircle, Monitor, Code } from "lucide-react";
 import WebView from "./webview";
 import { UIMessage } from "ai";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
@@ -34,7 +34,7 @@ export default function AppWrapper({
   domain?: string;
   running: boolean;
 }) {
-  const [mobileActiveTab, setMobileActiveTab] = useState<"chat" | "preview">(
+  const [mobileActiveTab, setMobileActiveTab] = useState<"chat" | "preview" | "code">(
     "chat"
   );
   const [isMobile, setIsMobile] = useState(false);
@@ -103,7 +103,7 @@ export default function AppWrapper({
           className={
             isMobile
               ? `absolute inset-0 z-10 transition-transform duration-200 ${
-                  mobileActiveTab === "preview"
+                  mobileActiveTab === "preview" || mobileActiveTab === "code"
                     ? "translate-x-0"
                     : "translate-x-full"
                 }`
@@ -124,6 +124,7 @@ export default function AppWrapper({
               baseId={baseId}
               appId={appId}
               domain={domain}
+              mobileActiveTab={mobileActiveTab}
             />
           </div>
         </div>
@@ -164,6 +165,21 @@ export default function AppWrapper({
               }`}
             />
             <span className="text-xs font-medium">Preview</span>
+          </button>
+          <button
+            onClick={() => setMobileActiveTab("code")}
+            className={`flex-1 flex flex-col items-center justify-center py-2 px-1 transition-colors ${
+              mobileActiveTab === "code"
+                ? "text-primary"
+                : "text-muted-foreground hover:text-foreground"
+            }`}
+          >
+            <Code
+              className={`h-6 w-6 mb-1 ${
+                mobileActiveTab === "code" ? "fill-current" : ""
+              }`}
+            />
+            <span className="text-xs font-medium">Code</span>
           </button>
         </div>
       )}

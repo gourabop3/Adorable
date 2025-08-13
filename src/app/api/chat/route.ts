@@ -130,10 +130,34 @@ export async function POST(req: NextRequest) {
       async onStepFinish(step) {
         messageList.add(step.response.messages, "response");
         
-        // Stream the response content in real-time
+        // Extract and stream code content in real-time
         const content = step.response.messages[0]?.content;
         if (content && typeof content === 'string') {
+          // Stream to the chat UI
           ui.append(content);
+          
+          // Extract code blocks and publish to streaming preview
+          const codeBlocks = extractCodeBlocks(content);
+          for (const block of codeBlocks) {
+            await redisPublisher.publish(`stream:${appId}`, JSON.stringify({
+              type: "code-chunk",
+              content: block.code,
+              language: block.language,
+              isComplete: false,
+              timestamp: new Date().toISOString()
+            }));
+          }
+          
+          // If this is the final step, mark code as complete
+          if (step.response.messages.length > 0) {
+            await redisPublisher.publish(`stream:${appId}`, JSON.stringify({
+              type: "code-chunk",
+              content: "",
+              language: "text",
+              isComplete: true,
+              timestamp: new Date().toISOString()
+            }));
+          }
         }
         
         if (shouldAbort) {
@@ -150,12 +174,26 @@ export async function POST(req: NextRequest) {
         await redisPublisher.del(cacheKey);
         console.error("Stream error:", error);
         ui.error("An error occurred while processing your request");
+        
+        // Publish error to streaming preview
+        await redisPublisher.publish(`stream:${appId}`, JSON.stringify({
+          type: "stream-error",
+          error: "An error occurred while processing your request",
+          timestamp: new Date().toISOString()
+        }));
       },
       onFinish: async () => {
         await redisPublisher.del(`app:${appId}:stream-state`);
         await redisPublisher.del(cacheKey);
         await mcp.disconnect();
         ui.done();
+        
+        // Publish completion to streaming preview
+        await redisPublisher.publish(`stream:${appId}`, JSON.stringify({
+          type: "stream-complete",
+          message: "Stream completed",
+          timestamp: new Date().toISOString()
+        }));
       },
       abortSignal: controller.signal,
     });
@@ -173,4 +211,19 @@ export async function POST(req: NextRequest) {
     ui.error("Failed to start chat stream");
     return ui.toDataStreamResponse();
   }
+}
+
+// Helper function to extract code blocks from content
+function extractCodeBlocks(content: string): Array<{ code: string; language: string }> {
+  const codeBlockRegex = /```(\w+)?\n([\s\S]*?)```/g;
+  const blocks: Array<{ code: string; language: string }> = [];
+  
+  let match;
+  while ((match = codeBlockRegex.exec(content)) !== null) {
+    const language = match[1] || 'text';
+    const code = match[2];
+    blocks.push({ code, language });
+  }
+  
+  return blocks;
 }
