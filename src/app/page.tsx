@@ -44,6 +44,12 @@ function HomeContent() {
         // Auto-hide the banner after 10 seconds
         const timer = setTimeout(() => {
           setShowPaymentSuccess(false);
+          // Clear the success parameter from URL
+          const newUrl = new URL(window.location.href);
+          newUrl.searchParams.delete('success');
+          newUrl.searchParams.delete('plan');
+          newUrl.searchParams.delete('credits');
+          window.history.replaceState({}, '', newUrl.toString());
         }, 10000);
         return () => clearTimeout(timer);
       }
@@ -154,7 +160,15 @@ function HomeContent() {
           <PaymentSuccessBanner
             plan={plan}
             credits={credits}
-            onClose={() => setShowPaymentSuccess(false)}
+            onClose={() => {
+              setShowPaymentSuccess(false);
+              // Clear the success parameter from URL immediately
+              const newUrl = new URL(window.location.href);
+              newUrl.searchParams.delete('success');
+              newUrl.searchParams.delete('plan');
+              newUrl.searchParams.delete('credits');
+              window.history.replaceState({}, '', newUrl.toString());
+            }}
           />
         )}
         

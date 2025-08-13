@@ -6,10 +6,11 @@ import { CreditCheck } from "./credit-check";
 import { CreditHistory } from "./credit-history";
 import { Crown, Coins, Settings, LogOut, ChevronDown, User, LogIn, Plus } from "lucide-react";
 import { SignIn, SignUp, useUser } from "@stackframe/stack";
+import { useRouter } from "next/navigation";
 
 export function CustomUserButton() {
   const { billing, isAuthenticated } = useBilling();
-  const { auth } = useUser();
+  const router = useRouter();
   const [showDropdown, setShowDropdown] = useState(false);
   const [showCreditCheck, setShowCreditCheck] = useState(false);
   const [showCreditHistory, setShowCreditHistory] = useState(false);
@@ -133,8 +134,18 @@ export function CustomUserButton() {
                 <button
                   onClick={() => {
                     setShowDropdown(false);
-                    if (auth) {
-                      auth.signOut();
+                    try {
+                      // Clear any stored tokens/cookies
+                      document.cookie.split(";").forEach(function(c) { 
+                        document.cookie = c.replace(/^ +/, "").replace(/=.*/, "=;expires=" + new Date().toUTCString() + ";path=/"); 
+                      });
+                      // Redirect to home page to trigger re-authentication
+                      router.push('/');
+                      console.log('Logout successful - redirected to home');
+                    } catch (error) {
+                      console.error('Logout error:', error);
+                      // Fallback: just redirect
+                      router.push('/');
                     }
                   }}
                   className="w-full flex items-center gap-3 px-4 py-2 text-left hover:bg-gray-50 dark:hover:bg-gray-800 transition-colors text-red-600"
