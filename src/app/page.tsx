@@ -1,34 +1,124 @@
 "use client";
 
-import { useRouter } from "next/navigation";
+import { useRouter, useSearchParams } from "next/navigation";
 import { PromptInput, PromptInputActions } from "@/components/ui/prompt-input";
 import { FrameworkSelector } from "@/components/framework-selector";
 import Image from "next/image";
 import LogoSvg from "@/logo.svg";
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { Button } from "@/components/ui/button";
 import { ExampleButton } from "@/components/ExampleButton";
-import { UserButton } from "@stackframe/stack";
+import { UserButtonWithBilling } from "@/components/user-button-with-billing";
 import { UserApps } from "@/components/user-apps";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { PromptInputTextareaWithTypingAnimation } from "@/components/prompt-input";
+import { BillingProvider, useBilling } from "@/contexts/billing-context";
+import { PaymentSuccessBanner } from "@/components/payment-success-banner";
 import { ModelSelector } from "@/components/model-selector";
 
 const queryClient = new QueryClient();
 
-export default function Home() {
+function HomeContent() {
   const [prompt, setPrompt] = useState("");
   const [framework, setFramework] = useState("nextjs");
   const [model, setModel] = useState("gemini-2.0-flash-exp");
   const [isLoading, setIsLoading] = useState(false);
+  const [showPaymentSuccess, setShowPaymentSuccess] = useState(false);
+  const [checkingCredits, setCheckingCredits] = useState(false);
   const router = useRouter();
+  const searchParams = useSearchParams();
+  const { billing, refetch, isAuthenticated } = useBilling();
+
+  // Check for payment success parameters
+  const success = searchParams.get('success');
+  const plan = searchParams.get('plan');
+  const credits = searchParams.get('credits');
+  const appCreated = searchParams.get('app_created');
+
+  // Development mode detection
+  const isDevelopment = process.env.NODE_ENV === 'development';
+
+  useEffect(() => {
+    if (success && !showPaymentSuccess) {
+      setShowPaymentSuccess(true);
+    }
+  }, [success, showPaymentSuccess]);
+
+  // Refresh billing data when user returns from app creation
+  useEffect(() => {
+    if (appCreated === 'true') {
+      refetch();
+      // Remove the parameter from URL
+      const newUrl = new URL(window.location.href);
+      newUrl.searchParams.delete('app_created');
+      window.history.replaceState({}, '', newUrl.toString());
+    }
+  }, [appCreated, refetch]);
+
+  // Refresh billing data when window regains focus (user returns from app creation)
+  useEffect(() => {
+    const handleFocus = () => {
+      console.log('Window focused, refreshing billing data...');
+      refetch();
+    };
+
+    window.addEventListener('focus', handleFocus);
+    return () => window.removeEventListener('focus', handleFocus);
+  }, [refetch]);
 
   const handleSubmit = async () => {
+    // Generate a unique request ID for tracking
+    const requestId = crypto.randomUUID();
+    
+    // Prevent multiple rapid submissions
+    if (isLoading || checkingCredits) {
+      console.log(`[${requestId}] Submission blocked - already processing`);
+      return;
+    }
+    
+    // Additional check to prevent empty submissions
+    if (!prompt.trim()) {
+      console.log(`[${requestId}] Submission blocked - empty prompt`);
+      return;
+    }
+    
+    console.log(`[${requestId}] Starting app creation process...`);
+    if (isDevelopment) {
+      console.log(`[${requestId}] Development mode detected - double execution possible`);
+    }
+    
     setIsLoading(true);
+    setCheckingCredits(true);
 
-    router.push(
-      `/app/new?message=${encodeURIComponent(prompt)}&template=${framework}&model=${model}`
-    );
+    try {
+      // Check if user has enough credits before proceeding
+      if (billing && billing.credits < 5) {
+        console.log(`[${requestId}] Insufficient credits, redirecting to upgrade`);
+        // Redirect to upgrade page with current parameters
+        const upgradeUrl = new URL('/billing', window.location.origin);
+        upgradeUrl.searchParams.set('redirect', encodeURIComponent(window.location.pathname + window.location.search));
+        upgradeUrl.searchParams.set('prompt', prompt);
+        upgradeUrl.searchParams.set('framework', framework);
+        upgradeUrl.searchParams.set('model', model);
+        window.location.href = upgradeUrl.toString();
+        return;
+      }
+
+      // Proceed with app creation
+      console.log(`[${requestId}] Credits sufficient, proceeding with app creation`);
+      router.push(
+        `/app/new?message=${encodeURIComponent(prompt)}&template=${framework}&model=${model}`
+      );
+    } catch (error) {
+      console.error(`[${requestId}] Error during app creation:`, error);
+      // Fallback to app creation without credit check
+      router.push(
+        `/app/new?message=${encodeURIComponent(prompt)}&template=${framework}&model=${model}`
+      );
+    } finally {
+      setIsLoading(false);
+      setCheckingCredits(false);
+    }
   };
 
   return (
@@ -46,10 +136,18 @@ export default function Home() {
             height={36}
           />
           <div className="flex items-center gap-2 flex-1 sm:w-80 justify-end">
-            <UserButton />
+            <UserButtonWithBilling />
           </div>
         </div>
 
+        {showPaymentSuccess && (
+          <PaymentSuccessBanner
+            plan={plan}
+            credits={credits}
+            onClose={() => setShowPaymentSuccess(false)}
+          />
+        )}
+        
         <div>
           <div className="w-full max-w-lg px-4 sm:px-0 mx-auto flex flex-col items-center mt-16 sm:mt-24 md:mt-32 col-start-1 col-end-1 row-start-1 row-end-1 z-10">
             <p className="text-neutral-600 text-center mb-6 text-3xl sm:text-4xl md:text-5xl font-bold">
@@ -108,6 +206,14 @@ export default function Home() {
         </div>
       </main>
     </QueryClientProvider>
+  );
+}
+
+export default function Home() {
+  return (
+    <BillingProvider>
+      <HomeContent />
+    </BillingProvider>
   );
 }
 

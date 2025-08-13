@@ -14,7 +14,6 @@ import { redisPublisher } from "@/lib/internal/redis";
 import { MessageList } from "@mastra/core/agent";
 import { createBuilderAgentWithModel } from "@/mastra/agents/builder";
 import { google } from "@ai-sdk/google";
-import { openai } from "@ai-sdk/openai";
 
 export async function POST(req: NextRequest) {
   console.log("creating new chat stream");
@@ -77,9 +76,7 @@ export async function POST(req: NextRequest) {
 
   const selectedModelId =
     (await redisPublisher.get(`app:${appId}:model`)) || "gemini-2.0-flash-exp";
-  const modelProvider = selectedModelId.startsWith("gpt")
-    ? openai(selectedModelId)
-    : google(selectedModelId);
+  const modelProvider = google(selectedModelId);
   const agent = createBuilderAgentWithModel(modelProvider);
 
   await (await agent.getMemory())?.saveMessages({

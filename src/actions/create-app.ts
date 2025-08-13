@@ -8,7 +8,6 @@ import { templates } from "@/lib/templates";
 import { memory, builderAgent, createBuilderAgentWithModel } from "@/mastra/agents/builder";
 import { sendMessageWithStreaming } from "@/lib/internal/stream-manager";
 import { google } from "@ai-sdk/google";
-import { openai } from "@ai-sdk/openai";
 
 export async function createApp({
   initialMessage,
@@ -100,9 +99,7 @@ export async function createApp({
 
     // Use selected model if provided, otherwise default builder agent
     const agentToUse = modelId
-      ? createBuilderAgentWithModel(
-          modelId.startsWith("gpt") ? openai(modelId) : google(modelId)
-        )
+      ? createBuilderAgentWithModel(google(modelId))
       : builderAgent;
 
     await sendMessageWithStreaming(agentToUse, app.id, mcpEphemeralUrl, fs, {

@@ -5,6 +5,8 @@ import {
   uuid,
   json,
   pgEnum,
+  integer,
+  boolean,
 } from "drizzle-orm/pg-core";
 import { drizzle } from "drizzle-orm/node-postgres";
 import { Pool } from "pg";
@@ -65,4 +67,49 @@ export const appDeployments = pgTable("app_deployments", {
   createdAt: timestamp("created_at").notNull().defaultNow(),
   deploymentId: text("deployment_id").notNull(),
   commit: text("commit").notNull(), // sha of the commit
+});
+
+// Billing and subscription tables
+export const subscriptionPlans = pgEnum("subscription_plan", [
+  "free",
+  "pro",
+]);
+
+export const users = pgTable("users", {
+  id: text("id").primaryKey(),
+  email: text("email").notNull().unique(),
+  name: text("name"),
+  image: text("image"),
+  credits: integer("credits").notNull().default(50), // Free users get 50 credits
+  plan: subscriptionPlans("plan").notNull().default("free"),
+  stripeCustomerId: text("stripe_customer_id").unique(),
+  createdAt: timestamp("created_at").notNull().defaultNow(),
+  updatedAt: timestamp("updated_at").notNull().defaultNow(),
+});
+
+export const subscriptions = pgTable("subscriptions", {
+  id: text("id").primaryKey(),
+  userId: text("user_id")
+    .notNull()
+    .references(() => users.id, { onDelete: "cascade" }),
+  stripeSubscriptionId: text("stripe_subscription_id").unique(),
+  stripePriceId: text("stripe_price_id").notNull(),
+  status: text("status").notNull(), // active, canceled, past_due, etc.
+  currentPeriodStart: timestamp("current_period_start"),
+  currentPeriodEnd: timestamp("current_period_end"),
+  cancelAtPeriodEnd: boolean("cancel_at_period_end").notNull().default(false),
+  createdAt: timestamp("created_at").notNull().defaultNow(),
+  updatedAt: timestamp("updated_at").notNull().defaultNow(),
+});
+
+export const creditTransactions = pgTable("credit_transactions", {
+  id: uuid("id").primaryKey().defaultRandom(),
+  userId: text("user_id")
+    .notNull()
+    .references(() => users.id, { onDelete: "cascade" }),
+  amount: integer("amount").notNull(), // positive for credits added, negative for credits used
+  description: text("description").notNull(),
+  type: text("type").notNull(), // "purchase", "usage", "bonus", "refund"
+  stripePaymentIntentId: text("stripe_payment_intent_id"),
+  createdAt: timestamp("created_at").notNull().defaultNow(),
 });

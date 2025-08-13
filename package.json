@@ -9,8 +9,7 @@
     "lint": "next lint"
   },
   "dependencies": {
-    "@ai-sdk/google": "^2.0.0-beta.8",
-    "@ai-sdk/openai": "^2.0.0-beta.8",
+    "@ai-sdk/google": "^2.0.0-beta.17",
     "@ai-sdk/react": "^2.0.0-beta.25",
     "@ai-sdk/ui-utils": "^2.0.0-canary.3",
     "@hookform/resolvers": "^5.0.1",
@@ -28,8 +27,9 @@
     "@radix-ui/react-tabs": "^1.1.11",
     "@radix-ui/react-tooltip": "^1.2.0",
     "@stackframe/stack": "^2.8.11",
+    "@stripe/stripe-js": "^7.7.0",
     "@tanstack/react-query": "^5.74.11",
-    "ai": "^5.0.0-beta.25",
+    "ai": "^5.0.0-beta.32",
     "class-variance-authority": "^0.7.1",
     "clsx": "^2.1.1",
     "dotenv": "^16.5.0",
@@ -54,6 +54,7 @@
     "resumable-stream": "^2.2.1",
     "shiki": "^3.2.2",
     "sonner": "^2.0.3",
+    "stripe": "^18.4.0",
     "tailwind-merge": "^3.2.0",
     "tailwindcss-animate": "^1.0.7",
     "tw-animate-css": "^1.2.5",
@@ -75,6 +76,6 @@
     "freestyle-sh": "^0.4.31",
     "tailwindcss": "^4.1.3",
     "tsx": "^4.19.3",
-    "typescript": "^5"
+    "typescript": "5.8.3"
   }
 }
