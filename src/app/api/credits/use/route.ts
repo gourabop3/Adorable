@@ -20,8 +20,12 @@ export async function POST(req: NextRequest) {
     // Get user's current credit balance
     let dbUser;
     try {
-      dbUser = await db.select().from(users).where(eq(users.id, user.userId)).limit(1);
-      dbUser = dbUser[0];
+      const userResult = await db.select().from(users).where(eq(users.id, user.userId)).limit(1);
+      dbUser = userResult[0];
+      
+      if (!dbUser) {
+        return NextResponse.json({ error: 'User not found' }, { status: 404 });
+      }
     } catch (dbError) {
       console.error('Database query error:', dbError);
       return NextResponse.json({ error: 'Database connection failed' }, { status: 500 });
@@ -57,9 +61,14 @@ export async function POST(req: NextRequest) {
     });
 
     // Get updated credit balance
-    const updatedUser = await db.query.users.findFirst({
-      where: eq(users.id, user.userId),
-    });
+    let updatedUser;
+    try {
+      const userResult = await db.select().from(users).where(eq(users.id, user.userId)).limit(1);
+      updatedUser = userResult[0];
+    } catch (dbError) {
+      console.error('Database query error for updated user:', dbError);
+      updatedUser = null;
+    }
 
     return NextResponse.json({ 
       success: true,

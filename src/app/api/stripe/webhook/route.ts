@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { db } from '@/db/schema';
-import { users, subscriptions } from '@/db/schema';
+import { users, subscriptions, creditTransactions } from '@/db/schema';
 import { eq } from 'drizzle-orm';
 import Stripe from 'stripe';
 
@@ -71,9 +71,14 @@ export async function POST(req: NextRequest) {
 async function handleSubscriptionChange(subscription: Stripe.Subscription) {
   try {
     const customerId = subscription.customer as string;
-    const dbUser = await db.query.users.findFirst({
-      where: eq(users.stripeCustomerId, customerId),
-    });
+    let dbUser;
+    try {
+      const userResult = await db.select().from(users).where(eq(users.stripeCustomerId, customerId)).limit(1);
+      dbUser = userResult[0];
+    } catch (dbError) {
+      console.error('Database user query error:', dbError);
+      dbUser = null;
+    }
 
     if (!dbUser) {
       console.error('User not found for customer:', customerId);
@@ -81,9 +86,14 @@ async function handleSubscriptionChange(subscription: Stripe.Subscription) {
     }
 
     // Update or create subscription
-    const existingSubscription = await db.query.subscriptions.findFirst({
-      where: eq(subscriptions.stripeSubscriptionId, subscription.id),
-    });
+    let existingSubscription;
+    try {
+      const subResult = await db.select().from(subscriptions).where(eq(subscriptions.stripeSubscriptionId, subscription.id)).limit(1);
+      existingSubscription = subResult[0];
+    } catch (dbError) {
+      console.error('Database subscription query error:', dbError);
+      existingSubscription = null;
+    }
 
     if (existingSubscription) {
       await db.update(subscriptions)
@@ -123,9 +133,14 @@ async function handleSubscriptionChange(subscription: Stripe.Subscription) {
 async function handleSubscriptionDeletion(subscription: Stripe.Subscription) {
   try {
     const customerId = subscription.customer as string;
-    const dbUser = await db.query.users.findFirst({
-      where: eq(users.stripeCustomerId, customerId),
-    });
+    let dbUser;
+    try {
+      const userResult = await db.select().from(users).where(eq(users.stripeCustomerId, customerId)).limit(1);
+      dbUser = userResult[0];
+    } catch (dbError) {
+      console.error('Database user query error:', dbError);
+      dbUser = null;
+    }
 
     if (!dbUser) {
       console.error('User not found for customer:', customerId);

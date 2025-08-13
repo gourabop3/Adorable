@@ -27,29 +27,34 @@ export async function POST(req: NextRequest) {
     return new Response("App not found", { status: 404 });
   }
 
-  // Check user authentication and credits
-  try {
-    const { getUser } = await import("@/auth/stack-auth");
-    const user = await getUser();
-    
-    if (user && user.userId) {
-      // Check if user has enough credits for chat usage
-      const { db } = await import("@/db/schema");
-      const { users } = await import("@/db/schema");
-      const { eq } = await import("drizzle-orm");
-      
-      const dbUser = await db.query.users.findFirst({
-        where: eq(users.id, user.userId),
-      });
-      
-      if (dbUser && dbUser.credits < 1) {
-        return new Response("Insufficient credits. Please purchase more credits to continue.", { status: 402 });
+        // Check user authentication and credits
+      try {
+        const { getUser } = await import("@/auth/stack-auth");
+        const user = await getUser();
+        
+        if (user && user.userId) {
+          // Check if user has enough credits for chat usage
+          const { db } = await import("@/db/schema");
+          const { users } = await import("@/db/schema");
+          const { eq } = await import("drizzle-orm");
+          
+          let dbUser;
+          try {
+            const userResult = await db.select().from(users).where(eq(users.id, user.userId)).limit(1);
+            dbUser = userResult[0];
+          } catch (dbError) {
+            console.error("Database query error:", dbError);
+            dbUser = null;
+          }
+          
+          if (dbUser && dbUser.credits < 1) {
+            return new Response("Insufficient credits. Please purchase more credits to continue.", { status: 402 });
+          }
+        }
+      } catch (error) {
+        console.error("Error checking user credits:", error);
+        // Continue without credit check if there's an error
       }
-    }
-  } catch (error) {
-    console.error("Error checking user credits:", error);
-    // Continue without credit check if there's an error
-  }
 
   // Request de-duplication (short TTL)
   const requestId = req.headers.get("x-request-id") || crypto.randomUUID();
