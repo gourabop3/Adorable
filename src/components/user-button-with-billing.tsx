@@ -21,7 +21,6 @@ export function UserButtonWithBilling() {
       <CreditDisplay 
         credits={billing?.credits || 0} 
         plan={billing?.plan || 'free'}
-        onUpgradeClick={() => setShowCreditCheck(true)}
         onShowHistory={() => setShowCreditHistory(true)}
       />
       <UserButton />

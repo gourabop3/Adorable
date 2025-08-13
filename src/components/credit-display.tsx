@@ -6,7 +6,6 @@ import { Button } from "./ui/button";
 interface CreditDisplayProps {
   credits: number;
   plan: 'free' | 'pro';
-  onUpgradeClick: () => void;
   onShowHistory: () => void;
 }
 
@@ -39,17 +38,6 @@ export function CreditDisplay({ credits, plan, onUpgradeClick, onShowHistory }: 
         <History className="h-3 w-3 mr-1" />
         History
       </Button>
-      
-      {!isPro && (
-        <Button
-          variant="outline"
-          size="sm"
-          onClick={onUpgradeClick}
-          className="h-7 px-2 text-xs"
-        >
-          Upgrade
-        </Button>
-      )}
     </div>
   );
 }
