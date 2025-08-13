@@ -165,20 +165,21 @@ export async function sendMessage(
     threadId: appId,
     resourceId: appId,
     maxSteps: 100,
-    maxRetries: 0,
-    maxOutputTokens: 8000,
+    maxRetries: 3, // Allow retries for better reliability
+    maxOutputTokens: 12000, // Increase token limit for better completion
     toolsets,
     async onChunk() {
       if (Date.now() - lastKeepAlive > 5000) {
         lastKeepAlive = Date.now();
         redisPublisher.set(`app:${appId}:stream-state`, "running", {
-          EX: 15,
+          EX: 30, // Increase keep-alive timeout
         });
       }
     },
     async onStepFinish(step) {
       messageList.add(step.response.messages, "response");
 
+      // Only abort if explicitly requested, not on every step
       if (shouldAbort) {
         await redisPublisher.del(`app:${appId}:stream-state`);
         controller.abort("Aborted stream after step finish");
@@ -190,50 +191,56 @@ export async function sendMessage(
       }
     },
     onError: async (error) => {
-      await mcp.disconnect();
-      await redisPublisher.del(`app:${appId}:stream-state`);
-      await redisPublisher.del(cacheKey); // Clean up request deduplication
+      console.error("❌ Stream error:", error);
       
-      // Enhanced error handling for quota issues
-      if (error?.message?.includes('quota') || error?.message?.includes('429') || error?.statusCode === 429) {
-        console.error("❌ Gemini API quota exceeded:", error.message);
+      try {
+        await mcp.disconnect();
+        await redisPublisher.del(`app:${appId}:stream-state`);
+        await redisPublisher.del(cacheKey); // Clean up request deduplication
         
-        // Extract retry delay from error if available
-        let retryDelay = 60; // default 60 seconds
-        let quotaViolations = [];
-        
-        try {
-          if (error.responseBody) {
-            const errorData = JSON.parse(error.responseBody);
-            if (errorData.error?.details) {
-              const retryInfo = errorData.error.details.find((detail: any) => 
-                detail['@type'] === 'type.googleapis.com/google.rpc.RetryInfo'
-              );
-              if (retryInfo?.retryDelay) {
-                retryInfo.retryDelay.replace('s', '');
-              }
-              
-              const quotaFailure = errorData.error.details.find((detail: any) => 
-                detail['@type'] === 'type.googleapis.com/google.rpc.QuotaFailure'
-              );
-              if (quotaFailure?.violations) {
-                quotaViolations = quotaFailure.violations;
+        // Enhanced error handling for quota issues
+        if (error?.message?.includes('quota') || error?.message?.includes('429') || error?.statusCode === 429) {
+          console.error("❌ Gemini API quota exceeded:", error.message);
+          
+          // Extract retry delay from error if available
+          let retryDelay = 60; // default 60 seconds
+          let quotaViolations = [];
+          
+          try {
+            if (error.responseBody) {
+              const errorData = JSON.parse(error.responseBody);
+              if (errorData.error?.details) {
+                const retryInfo = errorData.error.details.find((detail: any) => 
+                  detail['@type'] === 'type.googleapis.com/google.rpc.RetryInfo'
+                );
+                if (retryInfo?.retryDelay) {
+                  retryInfo.retryDelay.replace('s', '');
+                }
+                
+                const quotaFailure = errorData.error.details.find((detail: any) => 
+                  detail['@type'] === 'type.googleapis.com/google.rpc.QuotaFailure'
+                );
+                if (quotaFailure?.violations) {
+                  quotaViolations = quotaFailure.violations;
+                }
               }
             }
+          } catch (parseError) {
+            console.warn("Could not parse error details:", parseError);
           }
-        } catch (error) {
-          console.warn("Could not parse error details:", error);
+          
+          console.log(`⏰ Suggested retry delay: ${retryDelay} seconds`);
+          console.log("🚫 Quota violations:", quotaViolations.map((v: any) => v.quotaId).join(', '));
+          console.log("💡 To fix this:");
+          console.log("   1. Wait for quota reset (usually 1 minute for per-minute limits, 24 hours for daily limits)");
+          console.log("   2. Upgrade to a paid Google AI API plan for higher quotas");
+          console.log("   3. Implement request rate limiting in your application");
+          console.log("   4. Consider using a different model or reducing request frequency");
+        } else {
+          console.error("❌ Other streaming error:", error);
         }
-        
-        console.log(`⏰ Suggested retry delay: ${retryDelay} seconds`);
-        console.log("🚫 Quota violations:", quotaViolations.map((v: any) => v.quotaId).join(', '));
-        console.log("💡 To fix this:");
-        console.log("   1. Wait for quota reset (usually 1 minute for per-minute limits, 24 hours for daily limits)");
-        console.log("   2. Upgrade to a paid Google AI API plan for higher quotas");
-        console.log("   3. Implement request rate limiting in your application");
-        console.log("   4. Consider using a different model or reducing request frequency");
-      } else {
-        console.error("❌ Other error:", error);
+      } catch (cleanupError) {
+        console.error("❌ Error during cleanup:", cleanupError);
       }
     },
     onFinish: async () => {

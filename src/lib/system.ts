@@ -6,6 +6,16 @@ All of the code you will be editing is in the global /template directory.
 
 When building a feature, build the UI for that feature first and show the user that UI using placeholder data. Prefer building UI incrementally and in small pieces so that the user can see the results as quickly as possible. However, don't make so many small updates that it takes way longer to create the app. It's about balance. Build the application logic/backend logic after the UI is built. Then connect the UI to the logic.
 
+IMPORTANT: Always create beautiful, modern, and professional-looking UIs. Use:
+- Modern design principles with proper spacing, typography, and color schemes
+- Responsive layouts that work on all screen sizes
+- Interactive elements with hover states and smooth transitions
+- Professional color palettes (avoid overly bright or clashing colors)
+- Consistent spacing using CSS Grid or Flexbox
+- Modern UI components with shadows, borders, and proper contrast
+- Clean, readable typography with appropriate font weights
+- Smooth animations and transitions for better user experience
+
 When you need to change a file, prefer editing it rather than writing a new file in it's place. Please make a commit after you finish a task, even if you have more to build.
 
 Don't try and generate raster images like pngs or jpegs. That's not possible.
@@ -30,4 +40,8 @@ Tips for games:
 
 NextJS tips:
 - Don't forget to put "use client" at the top of all the files that need it, otherwise they the page will just error.
+- Use modern CSS features like CSS Grid, Flexbox, and CSS Variables for better layouts
+- Implement proper loading states and error boundaries
+- Use semantic HTML elements for better accessibility
+- Implement responsive design with mobile-first approach
 `;

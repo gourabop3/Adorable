@@ -10,11 +10,10 @@ import {
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
 
-export type SupportedModelId = "gemini-2.5-pro" | "gemini-2.0-flash-exp" | "gpt-4o" | "claude-3.5-sonnet";
+export type SupportedModelId = "gemini-2.5-pro" | "gpt-4o" | "claude-3.5-sonnet";
 
 export const MODELS: Record<SupportedModelId, { name: string; provider: string }> = {
   "gemini-2.5-pro": { name: "Gemini 2.5 Pro", provider: "google" },
-  "gemini-2.0-flash-exp": { name: "Gemini 2.0 Flash (exp)", provider: "google" },
   "gpt-4o": { name: "GPT-4o", provider: "openai" },
   "claude-3.5-sonnet": { name: "Claude 3.5 Sonnet", provider: "anthropic" },
 };
