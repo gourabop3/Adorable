@@ -1,4 +1,4 @@
-import { getStream, stopStream } from "@/lib/internal/stream-manager";
+import { getStream, stopStream } from "@/lib/streams";
 import { NextRequest } from "next/server";
 
 export async function GET(

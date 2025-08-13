@@ -144,5 +144,6 @@ export async function POST(req: NextRequest) {
 
   console.log("Stream created for appId:", appId, "with prompt:", messages.at(-1));
 
-  return await setStream(appId, messages.at(-1)!, stream);
+  const resumable = await setStream(appId, messages.at(-1)!, stream);
+  return resumable.response();
 }

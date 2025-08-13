@@ -8,6 +8,7 @@ import { useEffect, useMemo, useState } from "react";
 import { ChatContainer } from "./ui/chat-container";
 import { UIMessage } from "ai";
 import { ToolMessage } from "./tools";
+import { EnhancedToolMessage } from "./enhanced-tools";
 import { useQuery } from "@tanstack/react-query";
 import { chatState } from "@/actions/chat-streaming";
 import { CompressedImage } from "@/lib/image-compression";
@@ -211,7 +212,7 @@ function MessageBody({ message }: { message: any }) {
           }
 
           if (part.type.startsWith("tool-")) {
-            return <ToolMessage key={index} toolInvocation={part} />;
+            return <EnhancedToolMessage key={index} toolInvocation={part} />;
           }
         })}
       </div>
