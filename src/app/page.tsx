@@ -36,36 +36,25 @@ function HomeContent() {
   const credits = searchParams.get('credits');
   const appCreated = searchParams.get('app_created');
 
-  // Development mode detection
-  const isDevelopment = process.env.NODE_ENV === 'development';
+      // Development mode detection
+    const isDevelopment = process.env.NODE_ENV === 'development';
 
-  useEffect(() => {
-    if (success && !showPaymentSuccess) {
-      setShowPaymentSuccess(true);
-    }
-  }, [success, showPaymentSuccess]);
+    useEffect(() => {
+      if (success && !showPaymentSuccess) {
+        setShowPaymentSuccess(true);
+      }
+    }, [success, showPaymentSuccess]);
 
-  // Refresh billing data when user returns from app creation
-  useEffect(() => {
-    if (appCreated === 'true') {
-      refetch();
-      // Remove the parameter from URL
-      const newUrl = new URL(window.location.href);
-      newUrl.searchParams.delete('app_created');
-      window.history.replaceState({}, '', newUrl.toString());
-    }
-  }, [appCreated, refetch]);
-
-  // Refresh billing data when window regains focus (user returns from app creation)
-  useEffect(() => {
-    const handleFocus = () => {
-      console.log('Window focused, refreshing billing data...');
-      refetch();
-    };
-
-    window.addEventListener('focus', handleFocus);
-    return () => window.removeEventListener('focus', handleFocus);
-  }, [refetch]);
+    // Refresh billing data when user returns from app creation
+    useEffect(() => {
+      if (appCreated === 'true') {
+        refetch();
+        // Remove the parameter from URL
+        const newUrl = new URL(window.location.href);
+        newUrl.searchParams.delete('app_created');
+        window.history.replaceState({}, '', newUrl.toString());
+      }
+    }, [appCreated, refetch]);
 
   const handleSubmit = async () => {
     // Generate a unique request ID for tracking
@@ -84,10 +73,8 @@ function HomeContent() {
     }
     
     console.log(`[${requestId}] Starting app creation process...`);
-    if (isDevelopment) {
-      console.log(`[${requestId}] Development mode detected - double execution possible`);
-    }
     
+    // Set loading state immediately to prevent double submission
     setIsLoading(true);
     setCheckingCredits(true);
 
@@ -128,8 +115,8 @@ function HomeContent() {
         
         // Update billing context with new credit balance
         if (billing) {
-          // This will trigger a re-render with updated credits
-          window.location.reload();
+          // Refresh billing data without page reload
+          refetch();
         }
       } catch (error) {
         console.error(`[${requestId}] Error deducting credits:`, error);
