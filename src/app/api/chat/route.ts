@@ -27,6 +27,30 @@ export async function POST(req: NextRequest) {
     return new Response("App not found", { status: 404 });
   }
 
+  // Check user authentication and credits
+  try {
+    const { getUser } = await import("@/auth/stack-auth");
+    const user = await getUser();
+    
+    if (user && user.userId) {
+      // Check if user has enough credits for chat usage
+      const { db } = await import("@/db/schema");
+      const { users } = await import("@/db/schema");
+      const { eq } = await import("drizzle-orm");
+      
+      const dbUser = await db.query.users.findFirst({
+        where: eq(users.id, user.userId),
+      });
+      
+      if (dbUser && dbUser.credits < 1) {
+        return new Response("Insufficient credits. Please purchase more credits to continue.", { status: 402 });
+      }
+    }
+  } catch (error) {
+    console.error("Error checking user credits:", error);
+    // Continue without credit check if there's an error
+  }
+
   // Request de-duplication (short TTL)
   const requestId = req.headers.get("x-request-id") || crypto.randomUUID();
   const cacheKey = `request:${appId}:${requestId}`;
@@ -210,6 +234,40 @@ export async function sendMessage(
     onFinish: async () => {
       await redisPublisher.del(`app:${appId}:stream-state`);
       await redisPublisher.del(cacheKey); // Clean up request deduplication
+      
+      // Deduct 1 credit for chat usage
+      try {
+        const { getUser } = await import("@/auth/stack-auth");
+        const user = await getUser();
+        
+        if (user && user.userId) {
+          const { db } = await import("@/db/schema");
+          const { users, creditTransactions } = await import("@/db/schema");
+          const { eq } = await import("drizzle-orm");
+          
+          // Deduct 1 credit from user
+          await db.update(users)
+            .set({ 
+              credits: db.raw(`credits - 1`),
+              updatedAt: new Date()
+            })
+            .where(eq(users.id, user.userId));
+
+          // Record credit transaction
+          await db.insert(creditTransactions).values({
+            userId: user.userId,
+            amount: -1, // Negative amount for usage
+            description: `Used 1 credit for chat in app ${appId}`,
+            type: 'usage',
+            metadata: { appId },
+          });
+
+          console.log(`Deducted 1 credit from user ${user.userId} for chat usage`);
+        }
+      } catch (error) {
+        console.error("Error deducting credits for chat:", error);
+      }
+      
       await mcp.disconnect();
     },
     abortSignal: controller.signal,

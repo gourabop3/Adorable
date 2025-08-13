@@ -13,6 +13,8 @@ import { useQuery } from "@tanstack/react-query";
 import { chatState } from "@/actions/chat-streaming";
 import { CompressedImage } from "@/lib/image-compression";
 import { useChatSafe } from "./use-chat";
+import { useBilling } from "@/contexts/billing-context";
+import { Coins, AlertTriangle } from "lucide-react";
 
 export default function Chat(props: {
   appId: string;
@@ -22,6 +24,7 @@ export default function Chat(props: {
   running: boolean;
   selectedModel?: string;
 }) {
+  const { billing } = useBilling();
   const { data: chat } = useQuery({
     queryKey: ["stream", props.appId],
     queryFn: async () => {
@@ -142,6 +145,22 @@ export default function Chat(props: {
       style={{ transform: "translateZ(0)" }}
     >
       {props.topBar}
+      
+      {/* Credit Warning Banner */}
+      {billing && billing.credits < 3 && (
+        <div className="w-full p-3 bg-yellow-50 dark:bg-yellow-950 border border-yellow-200 dark:border-yellow-800 rounded-lg mb-4">
+          <div className="flex items-center gap-2">
+            <AlertTriangle className="h-4 w-4 text-yellow-600" />
+            <div className="flex-1">
+              <p className="text-sm text-yellow-800 dark:text-yellow-700">
+                <strong>Low Credits:</strong> You have {billing.credits} credits remaining. 
+                Each chat message costs 1 credit. Consider purchasing more credits to continue.
+              </p>
+            </div>
+          </div>
+        </div>
+      )}
+      
       <div
         className="flex-1 overflow-y-auto flex flex-col space-y-6 min-h-0"
         style={{ overflowAnchor: "auto" }}
