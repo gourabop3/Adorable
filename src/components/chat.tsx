@@ -1,10 +1,9 @@
 "use client";
 
 import Image from "next/image";
-
 import { PromptInputBasic } from "./chatinput";
 import { Markdown } from "./ui/markdown";
-import { useEffect, useMemo, useState } from "react";
+import { useEffect, useMemo, useState, useCallback } from "react";
 import { ChatContainer } from "./ui/chat-container";
 import { UIMessage } from "ai";
 import { ToolMessage } from "./tools";
@@ -13,6 +12,7 @@ import { useQuery } from "@tanstack/react-query";
 import { chatState } from "@/actions/chat-streaming";
 import { CompressedImage } from "@/lib/image-compression";
 import { useChatSafe } from "./use-chat";
+import { AlertCircle, RefreshCw } from "lucide-react";
 
 export default function Chat(props: {
   appId: string;
@@ -21,6 +21,9 @@ export default function Chat(props: {
   topBar?: React.ReactNode;
   running: boolean;
 }) {
+  const [error, setError] = useState<Error | null>(null);
+  const [isRetrying, setIsRetrying] = useState(false);
+
   const { data: chat } = useQuery({
     queryKey: ["stream", props.appId],
     queryFn: async () => {
@@ -42,10 +45,22 @@ export default function Chat(props: {
     return () => clearTimeout(timer);
   }, [props.running, chat?.state]);
 
-  const { messages, sendMessage } = useChatSafe({
+  const handleError = useCallback((error: Error) => {
+    console.error("Chat error:", error);
+    setError(error);
+  }, []);
+
+  const handleFinish = useCallback(() => {
+    setError(null);
+    setIsRetrying(false);
+  }, []);
+
+  const { messages, sendMessage, reload } = useChatSafe({
     messages: props.initialMessages,
     id: props.appId,
     resume: debouncedRunning,
+    onError: handleError,
+    onFinish: handleFinish,
   });
 
   const dedupedMessages = useMemo(() => {
@@ -60,6 +75,18 @@ export default function Chat(props: {
 
   const [input, setInput] = useState("");
 
+  const handleRetry = useCallback(async () => {
+    setIsRetrying(true);
+    setError(null);
+    try {
+      await reload();
+    } catch (error) {
+      setError(error as Error);
+    } finally {
+      setIsRetrying(false);
+    }
+  }, [reload]);
+
   const onSubmit = (e?: React.FormEvent<HTMLFormElement>) => {
     if (e?.preventDefault) {
       e.preventDefault();
@@ -71,6 +98,7 @@ export default function Chat(props: {
 
     const messageText = input.trim();
     setInput("");
+    setError(null); // Clear any previous errors
 
     setTimeout(() => {
       const messageId = crypto.randomUUID();
@@ -122,15 +150,52 @@ export default function Chat(props: {
       }
     );
     setInput("");
+    setError(null);
   };
 
   async function handleStop() {
-    await fetch("/api/chat/" + props.appId + "/stream", {
-      method: "DELETE",
-      headers: {
-        "Adorable-App-Id": props.appId,
-      },
-    });
+    try {
+      await fetch("/api/chat/" + props.appId + "/stream", {
+        method: "DELETE",
+        headers: {
+          "Adorable-App-Id": props.appId,
+        },
+      });
+    } catch (error) {
+      console.error("Failed to stop stream:", error);
+    }
+  }
+
+  // Error boundary UI
+  if (error) {
+    return (
+      <div className="flex flex-col h-full">
+        {props.topBar}
+        <div className="flex-1 flex items-center justify-center">
+          <div className="text-center space-y-4 p-6">
+            <AlertCircle className="h-12 w-12 text-red-500 mx-auto" />
+            <h3 className="text-lg font-semibold text-gray-900 dark:text-gray-100">
+              Chat Error
+            </h3>
+            <p className="text-gray-600 dark:text-gray-400 max-w-md">
+              {error.message || "Something went wrong with the chat stream. Please try again."}
+            </p>
+            <button
+              onClick={handleRetry}
+              disabled={isRetrying}
+              className="inline-flex items-center gap-2 px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
+            >
+              {isRetrying ? (
+                <RefreshCw className="h-4 w-4 animate-spin" />
+              ) : (
+                <RefreshCw className="h-4 w-4" />
+              )}
+              {isRetrying ? "Retrying..." : "Retry"}
+            </button>
+          </div>
+        </div>
+      </div>
+    );
   }
 
   return (
