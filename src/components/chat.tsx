@@ -12,7 +12,7 @@ import { useQuery } from "@tanstack/react-query";
 import { chatState } from "@/actions/chat-streaming";
 import { CompressedImage } from "@/lib/image-compression";
 import { useChatSafe } from "./use-chat";
-import { AlertCircle, RefreshCw } from "lucide-react";
+import { AlertCircle, RefreshCw, Loader2, CheckCircle } from "lucide-react";
 
 export default function Chat(props: {
   appId: string;
@@ -23,13 +23,14 @@ export default function Chat(props: {
 }) {
   const [error, setError] = useState<Error | null>(null);
   const [isRetrying, setIsRetrying] = useState(false);
+  const [streamStatus, setStreamStatus] = useState<'idle' | 'connecting' | 'streaming' | 'completed' | 'error'>('idle');
 
   const { data: chat } = useQuery({
     queryKey: ["stream", props.appId],
     queryFn: async () => {
       return chatState(props.appId);
     },
-    refetchInterval: 2000,
+    refetchInterval: 1000,
     refetchOnWindowFocus: false,
     staleTime: 1000,
     refetchOnMount: false,
@@ -40,19 +41,40 @@ export default function Chat(props: {
   const [debouncedRunning, setDebouncedRunning] = useState(false);
   useEffect(() => {
     const timer = setTimeout(() => {
-      setDebouncedRunning(props.running && chat?.state === "running");
+      const isRunning = props.running && chat?.state === "running";
+      setDebouncedRunning(isRunning);
+      
+      // Update stream status based on running state
+      if (isRunning) {
+        setStreamStatus('streaming');
+      } else if (chat?.state === "running") {
+        setStreamStatus('streaming');
+      } else if (error) {
+        setStreamStatus('error');
+      } else if (streamStatus === 'streaming') {
+        setStreamStatus('completed');
+      } else {
+        setStreamStatus('idle');
+      }
     }, 300);
     return () => clearTimeout(timer);
-  }, [props.running, chat?.state]);
+  }, [props.running, chat?.state, error, streamStatus]);
 
   const handleError = useCallback((error: Error) => {
     console.error("Chat error:", error);
     setError(error);
+    setStreamStatus('error');
   }, []);
 
   const handleFinish = useCallback(() => {
     setError(null);
     setIsRetrying(false);
+    setStreamStatus('completed');
+    
+    // Reset to idle after a delay
+    setTimeout(() => {
+      setStreamStatus('idle');
+    }, 2000);
   }, []);
 
   const { messages, sendMessage, reload } = useChatSafe({
@@ -78,10 +100,14 @@ export default function Chat(props: {
   const handleRetry = useCallback(async () => {
     setIsRetrying(true);
     setError(null);
+    setStreamStatus('connecting');
+    
     try {
       await reload();
+      setStreamStatus('streaming');
     } catch (error) {
       setError(error as Error);
+      setStreamStatus('error');
     } finally {
       setIsRetrying(false);
     }
@@ -98,7 +124,8 @@ export default function Chat(props: {
 
     const messageText = input.trim();
     setInput("");
-    setError(null); // Clear any previous errors
+    setError(null);
+    setStreamStatus('connecting');
 
     setTimeout(() => {
       const messageId = crypto.randomUUID();
@@ -151,20 +178,65 @@ export default function Chat(props: {
     );
     setInput("");
     setError(null);
+    setStreamStatus('connecting');
   };
 
   async function handleStop() {
     try {
+      setStreamStatus('connecting');
       await fetch("/api/chat/" + props.appId + "/stream", {
         method: "DELETE",
         headers: {
           "Adorable-App-Id": props.appId,
         },
       });
+      setStreamStatus('idle');
     } catch (error) {
       console.error("Failed to stop stream:", error);
+      setStreamStatus('error');
     }
   }
+
+  // Stream status indicator
+  const getStreamStatusIndicator = () => {
+    switch (streamStatus) {
+      case 'connecting':
+        return (
+          <div className="flex items-center gap-2 text-blue-600">
+            <Loader2 className="h-4 w-4 animate-spin" />
+            <span className="text-sm">Connecting...</span>
+          </div>
+        );
+      case 'streaming':
+        return (
+          <div className="flex items-center gap-2 text-green-600">
+            <div className="w-2 h-2 bg-green-500 rounded-full animate-pulse"></div>
+            <span className="text-sm">Live</span>
+          </div>
+        );
+      case 'completed':
+        return (
+          <div className="flex items-center gap-2 text-green-600">
+            <CheckCircle className="h-4 w-4" />
+            <span className="text-sm">Completed</span>
+          </div>
+        );
+      case 'error':
+        return (
+          <div className="flex items-center gap-2 text-red-600">
+            <AlertCircle className="h-4 w-4" />
+            <span className="text-sm">Error</span>
+          </div>
+        );
+      default:
+        return (
+          <div className="flex items-center gap-2 text-gray-500">
+            <div className="w-2 h-2 bg-gray-400 rounded-full"></div>
+            <span className="text-sm">Idle</span>
+          </div>
+        );
+    }
+  };
 
   // Error boundary UI
   if (error) {
@@ -186,7 +258,7 @@ export default function Chat(props: {
               className="inline-flex items-center gap-2 px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
             >
               {isRetrying ? (
-                <RefreshCw className="h-4 w-4 animate-spin" />
+                <Loader2 className="h-4 w-4 animate-spin" />
               ) : (
                 <RefreshCw className="h-4 w-4" />
               )}
@@ -204,6 +276,29 @@ export default function Chat(props: {
       style={{ transform: "translateZ(0)" }}
     >
       {props.topBar}
+      
+      {/* Stream Status Bar */}
+      <div className="px-4 py-2 bg-gray-50 dark:bg-gray-800 border-b border-gray-200 dark:border-gray-700">
+        <div className="flex items-center justify-between">
+          <div className="flex items-center gap-2">
+            <span className="text-sm font-medium text-gray-700 dark:text-gray-300">
+              Stream Status:
+            </span>
+            {getStreamStatusIndicator()}
+          </div>
+          
+          {streamStatus === 'streaming' && (
+            <button
+              onClick={handleStop}
+              className="inline-flex items-center gap-2 px-3 py-1 text-sm bg-red-100 text-red-700 rounded-md hover:bg-red-200 transition-colors"
+            >
+              <div className="w-2 h-2 bg-red-500 rounded-full"></div>
+              Stop Stream
+            </button>
+          )}
+        </div>
+      </div>
+      
       <div
         className="flex-1 overflow-y-auto flex flex-col space-y-6 min-h-0"
         style={{ overflowAnchor: "auto" }}
@@ -223,7 +318,7 @@ export default function Chat(props: {
           }}
           onSubmit={onSubmit}
           onSubmitWithImages={onSubmitWithImages}
-          isGenerating={props.isLoading || debouncedRunning}
+          isGenerating={props.isLoading || debouncedRunning || streamStatus === 'connecting'}
         />
       </div>
     </div>

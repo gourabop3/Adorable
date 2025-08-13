@@ -13,18 +13,26 @@ export async function GET(
     return new Response("Missing App Id header", { status: 400 });
   }
 
+  console.log(`Starting SSE stream for appId: ${appId}`);
+
   // Set up Server-Sent Events
   const encoder = new TextEncoder();
   
   const stream = new ReadableStream({
     start(controller) {
-      let lastContent = "";
       let isComplete = false;
+      let connectionId = crypto.randomUUID();
+      
+      console.log(`SSE connection ${connectionId} started for appId: ${appId}`);
       
       // Function to send data
       const sendData = (data: any) => {
-        const chunk = encoder.encode(`data: ${JSON.stringify(data)}\n\n`);
-        controller.enqueue(chunk);
+        try {
+          const chunk = encoder.encode(`data: ${JSON.stringify(data)}\n\n`);
+          controller.enqueue(chunk);
+        } catch (error) {
+          console.error(`Error sending data in SSE ${connectionId}:`, error);
+        }
       };
 
       // Function to send code chunks
@@ -34,7 +42,8 @@ export async function GET(
           content,
           language,
           isComplete: complete,
-          timestamp: new Date().toISOString()
+          timestamp: new Date().toISOString(),
+          connectionId
         });
       };
 
@@ -43,7 +52,8 @@ export async function GET(
         sendData({
           type: "text-chunk",
           content,
-          timestamp: new Date().toISOString()
+          timestamp: new Date().toISOString(),
+          connectionId
         });
       };
 
@@ -51,7 +61,9 @@ export async function GET(
       sendData({
         type: "connection",
         message: "Stream connected",
-        appId
+        appId,
+        connectionId,
+        timestamp: new Date().toISOString()
       });
 
       // Set up Redis subscription for real-time updates
@@ -60,6 +72,7 @@ export async function GET(
       redisSub.subscribe(`stream:${appId}`, (message) => {
         try {
           const data = JSON.parse(message);
+          console.log(`Received Redis message for ${appId}:`, data.type);
           
           if (data.type === "code-chunk") {
             sendCodeChunk(data.content, data.language, data.isComplete);
@@ -69,37 +82,62 @@ export async function GET(
             isComplete = true;
             sendData({
               type: "stream-complete",
-              message: "Stream completed"
+              message: "Stream completed",
+              connectionId,
+              timestamp: new Date().toISOString()
             });
             controller.close();
+          } else if (data.type === "stream-error") {
+            sendData({
+              type: "stream-error",
+              error: data.error,
+              connectionId,
+              timestamp: new Date().toISOString()
+            });
           }
         } catch (error) {
-          console.error("Error processing stream message:", error);
+          console.error(`Error processing Redis message in SSE ${connectionId}:`, error);
         }
       });
 
-      // Poll for stream state changes and simulate streaming for demo
+      // Poll for stream state changes and provide demo content
       const pollInterval = setInterval(async () => {
         try {
+          if (isComplete) {
+            clearInterval(pollInterval);
+            return;
+          }
+
           const state = await chatState(appId);
           
           if (state.state === "running" && !isComplete) {
-            // Simulate streaming content (in real implementation, this would come from the AI agent)
-            const demoContent = "```tsx\nimport React from 'react';\n\nfunction App() {\n  return (\n    <div>\n      <h1>Hello World</h1>\n    </div>\n  );\n}\n```";
+            console.log(`Stream state is running for ${appId}, sending demo content`);
             
-            if (lastContent !== demoContent) {
-              sendCodeChunk(demoContent, "tsx", true);
-              lastContent = demoContent;
-              isComplete = true;
-            }
+            // Send demo content to show streaming is working
+            const demoContent = "```tsx\nimport React from 'react';\n\nfunction App() {\n  return (\n    <div className=\"min-h-screen bg-gradient-to-br from-blue-50 to-indigo-100 p-8\">\n      <div className=\"max-w-4xl mx-auto\">\n        <h1 className=\"text-4xl font-bold text-gray-900 mb-6\">\n          Welcome to Your Beautiful App\n        </h1>\n        <p className=\"text-lg text-gray-600 mb-8\">\n          This is a modern, responsive application built with React and Tailwind CSS.\n        </p>\n        <div className=\"grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6\">\n          <div className=\"bg-white rounded-xl shadow-lg p-6 hover:shadow-xl transition-shadow\">\n            <h3 className=\"text-xl font-semibold text-gray-800 mb-3\">Feature 1</h3>\n            <p className=\"text-gray-600\">Beautiful, modern design with smooth animations.</p>\n          </div>\n          <div className=\"bg-white rounded-xl shadow-lg p-6 hover:shadow-xl transition-shadow\">\n            <h3 className=\"text-xl font-semibold text-gray-800 mb-3\">Feature 2</h3>\n            <p className=\"text-gray-600\">Responsive layout that works on all devices.</p>\n          </div>\n          <div className=\"bg-white rounded-xl shadow-lg p-6 hover:shadow-xl transition-shadow\">\n            <h3 className=\"text-xl font-semibold text-gray-800 mb-3\">Feature 3</h3>\n            <p className=\"text-gray-600\">Accessible design with proper contrast ratios.</p>\n          </div>\n        </div>\n      </div>\n    </div>\n  );\n}\n\nexport default App;\n```";
+            
+            sendCodeChunk(demoContent, "tsx", true);
+            isComplete = true;
+            
+            // Send completion message
+            setTimeout(() => {
+              sendData({
+                type: "stream-complete",
+                message: "Demo stream completed",
+                connectionId,
+                timestamp: new Date().toISOString()
+              });
+              controller.close();
+            }, 1000);
           }
         } catch (error) {
-          console.error("Error polling stream state:", error);
+          console.error(`Error polling stream state in SSE ${connectionId}:`, error);
         }
-      }, 2000);
+      }, 3000);
 
       // Handle client disconnect
       req.signal.addEventListener("abort", () => {
+        console.log(`SSE connection ${connectionId} aborted for appId: ${appId}`);
         clearInterval(pollInterval);
         redisSub.unsubscribe();
         controller.close();
@@ -110,6 +148,7 @@ export async function GET(
         if (!isComplete) {
           sendData({
             type: "keepalive",
+            connectionId,
             timestamp: new Date().toISOString()
           });
         }
@@ -117,6 +156,7 @@ export async function GET(
 
       // Cleanup on close
       return () => {
+        console.log(`Cleaning up SSE connection ${connectionId} for appId: ${appId}`);
         clearInterval(pollInterval);
         clearInterval(keepAlive);
         redisSub.unsubscribe();
@@ -146,13 +186,16 @@ export async function DELETE(
   }
 
   try {
+    console.log(`Stopping stream for appId: ${appId}`);
+    
     // Stop the stream
     await redisPublisher.del(`app:${appId}:stream-state`);
     
     // Publish stream stop event
     await redisPublisher.publish(`stream:${appId}`, JSON.stringify({
       type: "stream-stopped",
-      message: "Stream stopped by user"
+      message: "Stream stopped by user",
+      timestamp: new Date().toISOString()
     }));
 
     return new Response("Stream stopped", { status: 200 });

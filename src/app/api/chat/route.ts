@@ -6,11 +6,6 @@ import { UIMessage } from "ai";
 import { streamText } from "ai";
 import { createStreamableUI } from "ai/ui";
 
-// "fix" mastra mcp bug
-import { EventEmitter } from "events";
-import { getAbortCallback, setStream, stopStream } from "@/lib/streams";
-EventEmitter.defaultMaxListeners = 1000;
-
 import { NextRequest } from "next/server";
 import { redisPublisher } from "@/lib/internal/redis";
 import { MessageList } from "@mastra/core/agent";
@@ -31,171 +26,164 @@ export async function POST(req: NextRequest) {
     return new Response("App not found", { status: 404 });
   }
 
-  // Request de-duplication (short TTL)
+  // Simple request deduplication
   const requestId = req.headers.get("x-request-id") || crypto.randomUUID();
   const cacheKey = `request:${appId}:${requestId}`;
-  const existingRequest = await redisPublisher.get(cacheKey);
-  if (existingRequest === "processing") {
-    return new Response("Request already being processed", { status: 409 });
-  }
-  await redisPublisher.set(cacheKey, "processing", { EX: 10 });
-
-  const streamState = await redisPublisher.get("app:" + appId + ":stream-state");
-  if (streamState === "running") {
-    console.log("Stopping previous stream for appId:", appId);
-    stopStream(appId);
-
-    const maxAttempts = 60;
-    let attempts = 0;
-    while (attempts < maxAttempts) {
-      await new Promise((resolve) => setTimeout(resolve, 500));
-      const updatedState = await redisPublisher.get("app:" + appId + ":stream-state");
-      if (updatedState !== "running") {
-        break;
-      }
-      attempts++;
-    }
-
-    if (attempts >= maxAttempts) {
-      await redisPublisher.del(`app:${appId}:stream-state`);
-      return new Response(
-        "Previous stream is still shutting down, please try again",
-        { status: 429 }
-      );
-    }
-  }
-
-  const { messages }: { messages: UIMessage[] } = await req.json();
-
-  const { mcpEphemeralUrl } = await freestyle.requestDevServer({
-    repoId: app.info.gitRepo,
-  });
-
-  const mcp = new MCPClient({
-    id: crypto.randomUUID(),
-    servers: { dev_server: { url: new URL(mcpEphemeralUrl) } },
-  });
-  const toolsets = await mcp.getToolsets();
-
-  const selectedModelId =
-    (await redisPublisher.get(`app:${appId}:model`)) || "gemini-2.0-flash-exp";
-  const modelProvider = selectedModelId.startsWith("gpt")
-    ? openai(selectedModelId)
-    : google(selectedModelId);
-  const agent = createBuilderAgentWithModel(modelProvider);
-
-  await (await agent.getMemory())?.saveMessages({
-    messages: [
-      {
-        content: { parts: messages.at(-1)!.parts, format: 3 },
-        role: "user",
-        createdAt: new Date(),
-        id: messages.at(-1)!.id,
-        threadId: appId,
-        type: "text",
-        resourceId: appId,
-      },
-    ],
-  });
-
-  const controller = new AbortController();
-  let shouldAbort = false;
-  await getAbortCallback(appId, () => {
-    shouldAbort = true;
-  });
-
-  let lastKeepAlive = Date.now();
-  const messageList = new MessageList({ resourceId: appId, threadId: appId });
-
-  // Create a streamable UI for real-time updates
-  const ui = createStreamableUI();
-
+  
   try {
-    // Set stream state to running
-    await redisPublisher.set(`app:${appId}:stream-state`, "running", { EX: 30 });
+    // Check if request is already being processed
+    const existingRequest = await redisPublisher.get(cacheKey);
+    if (existingRequest === "processing") {
+      return new Response("Request already being processed", { status: 409 });
+    }
+    
+    // Mark request as processing
+    await redisPublisher.set(cacheKey, "processing", { EX: 30 });
 
+    const { messages }: { messages: UIMessage[] } = await req.json();
+
+    // Get dev server
+    const { mcpEphemeralUrl } = await freestyle.requestDevServer({
+      repoId: app.info.gitRepo,
+    });
+
+    const mcp = new MCPClient({
+      id: crypto.randomUUID(),
+      servers: { dev_server: { url: new URL(mcpEphemeralUrl) } },
+    });
+    
+    const toolsets = await mcp.getToolsets();
+
+    // Get model configuration
+    const selectedModelId =
+      (await redisPublisher.get(`app:${appId}:model`)) || "gemini-2.0-flash-exp";
+    const modelProvider = selectedModelId.startsWith("gpt")
+      ? openai(selectedModelId)
+      : google(selectedModelId);
+    
+    const agent = createBuilderAgentWithModel(modelProvider);
+
+    // Save user message to memory
+    await (await agent.getMemory())?.saveMessages({
+      messages: [
+        {
+          content: { parts: messages.at(-1)!.parts, format: 3 },
+          role: "user",
+          createdAt: new Date(),
+          id: messages.at(-1)!.id,
+          threadId: appId,
+          type: "text",
+          resourceId: appId,
+        },
+      ],
+    });
+
+    // Set stream state to running
+    await redisPublisher.set(`app:${appId}:stream-state`, "running", { EX: 60 });
+
+    // Create streamable UI for real-time updates
+    const ui = createStreamableUI();
+    const messageList = new MessageList({ resourceId: appId, threadId: appId });
+
+    // Start the agent stream
     const stream = await agent.stream([], {
       threadId: appId,
       resourceId: appId,
       maxSteps: 100,
-      maxRetries: 0,
+      maxRetries: 3, // Allow retries for better reliability
       maxOutputTokens: Number(process.env.MAX_OUTPUT_TOKENS ?? "24000"),
       toolsets,
+      
+      // Handle streaming chunks
       async onChunk() {
-        if (Date.now() - lastKeepAlive > 5000) {
-          lastKeepAlive = Date.now();
-          await redisPublisher.set(`app:${appId}:stream-state`, "running", { EX: 15 });
-        }
+        // Keep stream alive
+        await redisPublisher.set(`app:${appId}:stream-state`, "running", { EX: 60 });
       },
+      
+      // Handle step completion
       async onStepFinish(step) {
-        messageList.add(step.response.messages, "response");
-        
-        // Extract and stream code content in real-time
-        const content = step.response.messages[0]?.content;
-        if (content && typeof content === 'string') {
-          // Stream to the chat UI
-          ui.append(content);
+        try {
+          messageList.add(step.response.messages, "response");
           
-          // Extract code blocks and publish to streaming preview
-          const codeBlocks = extractCodeBlocks(content);
-          for (const block of codeBlocks) {
-            await redisPublisher.publish(`stream:${appId}`, JSON.stringify({
-              type: "code-chunk",
-              content: block.code,
-              language: block.language,
-              isComplete: false,
-              timestamp: new Date().toISOString()
-            }));
+          // Extract and stream content in real-time
+          const content = step.response.messages[0]?.content;
+          if (content && typeof content === 'string') {
+            // Stream to the chat UI
+            ui.append(content);
+            
+            // Extract code blocks and publish to streaming preview
+            const codeBlocks = extractCodeBlocks(content);
+            for (const block of codeBlocks) {
+              await redisPublisher.publish(`stream:${appId}`, JSON.stringify({
+                type: "code-chunk",
+                content: block.code,
+                language: block.language,
+                isComplete: false,
+                timestamp: new Date().toISOString()
+              }));
+            }
           }
-          
-          // If this is the final step, mark code as complete
-          if (step.response.messages.length > 0) {
-            await redisPublisher.publish(`stream:${appId}`, JSON.stringify({
-              type: "code-chunk",
-              content: "",
-              language: "text",
-              isComplete: true,
-              timestamp: new Date().toISOString()
-            }));
-          }
-        }
-        
-        if (shouldAbort) {
-          await redisPublisher.del(`app:${appId}:stream-state`);
-          controller.abort("Aborted stream after step finish");
-          const msgs = messageList.drainUnsavedMessages();
-          console.log(msgs);
-          await (await agent.getMemory())?.saveMessages({ messages: msgs });
+        } catch (error) {
+          console.error("Error in onStepFinish:", error);
         }
       },
+      
+      // Handle errors gracefully
       onError: async (error) => {
-        await mcp.disconnect();
-        await redisPublisher.del(`app:${appId}:stream-state`);
-        await redisPublisher.del(cacheKey);
         console.error("Stream error:", error);
-        ui.error("An error occurred while processing your request");
         
-        // Publish error to streaming preview
-        await redisPublisher.publish(`stream:${appId}`, JSON.stringify({
-          type: "stream-error",
-          error: "An error occurred while processing your request",
-          timestamp: new Date().toISOString()
-        }));
+        try {
+          // Save any messages that were generated
+          const msgs = messageList.drainUnsavedMessages();
+          if (msgs.length > 0) {
+            await (await agent.getMemory())?.saveMessages({ messages: msgs });
+          }
+          
+          // Publish error to streaming preview
+          await redisPublisher.publish(`stream:${appId}`, JSON.stringify({
+            type: "stream-error",
+            error: "An error occurred while processing your request",
+            timestamp: new Date().toISOString()
+          }));
+          
+          // Show error in chat UI
+          ui.error("An error occurred while processing your request. Please try again.");
+        } catch (cleanupError) {
+          console.error("Error during cleanup:", cleanupError);
+        }
       },
+      
+      // Handle successful completion
       onFinish: async () => {
-        await redisPublisher.del(`app:${appId}:stream-state`);
-        await redisPublisher.del(cacheKey);
-        await mcp.disconnect();
-        ui.done();
-        
-        // Publish completion to streaming preview
-        await redisPublisher.publish(`stream:${appId}`, JSON.stringify({
-          type: "stream-complete",
-          message: "Stream completed",
-          timestamp: new Date().toISOString()
-        }));
+        try {
+          console.log("Stream completed successfully for appId:", appId);
+          
+          // Save final messages
+          const msgs = messageList.drainUnsavedMessages();
+          if (msgs.length > 0) {
+            await (await agent.getMemory())?.saveMessages({ messages: msgs });
+          }
+          
+          // Mark code streams as complete
+          await redisPublisher.publish(`stream:${appId}`, JSON.stringify({
+            type: "stream-complete",
+            message: "Stream completed successfully",
+            timestamp: new Date().toISOString()
+          }));
+          
+          // Complete the UI stream
+          ui.done();
+          
+        } catch (error) {
+          console.error("Error in onFinish:", error);
+          ui.error("Stream completed but encountered an error during cleanup");
+        } finally {
+          // Cleanup
+          await redisPublisher.del(`app:${appId}:stream-state`);
+          await redisPublisher.del(cacheKey);
+          await mcp.disconnect();
+        }
       },
-      abortSignal: controller.signal,
     });
 
     console.log("Stream created for appId:", appId, "with prompt:", messages.at(-1));
@@ -205,11 +193,26 @@ export async function POST(req: NextRequest) {
 
   } catch (error) {
     console.error("Error in chat stream:", error);
-    await redisPublisher.del(`app:${appId}:stream-state`);
-    await redisPublisher.del(cacheKey);
-    await mcp.disconnect();
-    ui.error("Failed to start chat stream");
-    return ui.toDataStreamResponse();
+    
+    // Cleanup on error
+    try {
+      await redisPublisher.del(`app:${appId}:stream-state`);
+      await redisPublisher.del(cacheKey);
+    } catch (cleanupError) {
+      console.error("Error during cleanup:", cleanupError);
+    }
+    
+    // Return error response
+    return new Response(
+      JSON.stringify({ 
+        error: "Failed to start chat stream", 
+        details: error instanceof Error ? error.message : "Unknown error" 
+      }), 
+      { 
+        status: 500, 
+        headers: { "Content-Type": "application/json" } 
+      }
+    );
   }
 }
 
