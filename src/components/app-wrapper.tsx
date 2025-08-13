@@ -21,6 +21,7 @@ export default function AppWrapper({
   running,
   codeServerUrl,
   consoleUrl,
+  selectedModel,
 }: {
   appName: string;
   repo: string;
@@ -33,6 +34,7 @@ export default function AppWrapper({
   consoleUrl: string;
   domain?: string;
   running: boolean;
+  selectedModel?: string;
 }) {
   const [mobileActiveTab, setMobileActiveTab] = useState<"chat" | "preview">(
     "chat"
@@ -94,6 +96,7 @@ export default function AppWrapper({
               initialMessages={initialMessages}
               key={appId}
               running={running}
+              selectedModel={selectedModel}
             />
           </QueryClientProvider>
         </div>

@@ -20,6 +20,7 @@ export default function Chat(props: {
   isLoading?: boolean;
   topBar?: React.ReactNode;
   running: boolean;
+  selectedModel?: string;
 }) {
   const { data: chat } = useQuery({
     queryKey: ["stream", props.appId],
@@ -87,6 +88,7 @@ export default function Chat(props: {
         {
           headers: {
             "Adorable-App-Id": props.appId,
+            ...(props.selectedModel && { "x-selected-model": props.selectedModel }),
           },
         }
       );
@@ -118,6 +120,7 @@ export default function Chat(props: {
       {
         headers: {
           "Adorable-App-Id": props.appId,
+          ...(props.selectedModel && { "x-selected-model": props.selectedModel }),
         },
       }
     );

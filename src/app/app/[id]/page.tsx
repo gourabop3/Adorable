@@ -54,6 +54,10 @@ export default async function AppPage({
   // Use the previewDomain from the database, or fall back to a generated domain
   const domain = app.info.previewDomain;
 
+  // Get the selected model for this app
+  const { redisPublisher } = await import("@/lib/redis");
+  const selectedModel = await redisPublisher.get(`app:${app.info.id}:model`) || "gemini-2.5-pro";
+
   return (
     <AppWrapper
       key={app.info.id}
@@ -67,6 +71,7 @@ export default async function AppPage({
       repoId={app.info.gitRepo}
       domain={domain ?? undefined}
       running={(await chatState(app.info.id)).state === "running"}
+      selectedModel={selectedModel}
     />
   );
 }

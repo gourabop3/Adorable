@@ -10,16 +10,17 @@ import {
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
 
-export type SupportedModelId = "gemini-2.0-flash-exp" | "gemini-2.5-pro" | "gpt-4.1";
+export type SupportedModelId = "gemini-2.5-pro" | "gemini-2.0-flash-exp" | "gpt-4o" | "claude-3.5-sonnet";
 
-export const MODELS: Record<SupportedModelId, { name: string }> = {
-  "gemini-2.0-flash-exp": { name: "Gemini 2.0 Flash (exp)" },
-  "gemini-2.5-pro": { name: "Gemini 2.5 Pro" },
-  "gpt-4.1": { name: "GPT-4.1" },
+export const MODELS: Record<SupportedModelId, { name: string; provider: string }> = {
+  "gemini-2.5-pro": { name: "Gemini 2.5 Pro", provider: "google" },
+  "gemini-2.0-flash-exp": { name: "Gemini 2.0 Flash (exp)", provider: "google" },
+  "gpt-4o": { name: "GPT-4o", provider: "openai" },
+  "claude-3.5-sonnet": { name: "Claude 3.5 Sonnet", provider: "anthropic" },
 };
 
 export function ModelSelector({
-  value = "gemini-2.0-flash-exp",
+  value = "gemini-2.5-pro",
   onChange,
   className,
 }: {
@@ -52,7 +53,10 @@ export function ModelSelector({
               onClick={() => onChange(key as SupportedModelId)}
               className="gap-2 text-xs"
             >
-              {model.name}
+              <div className="flex flex-col items-start">
+                <span className="font-medium">{model.name}</span>
+                <span className="text-xs text-gray-500 capitalize">{model.provider}</span>
+              </div>
             </DropdownMenuItem>
           ))}
         </DropdownMenuContent>

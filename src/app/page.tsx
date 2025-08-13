@@ -21,7 +21,7 @@ const queryClient = new QueryClient();
 function HomeContent() {
   const [prompt, setPrompt] = useState("");
   const [framework, setFramework] = useState("nextjs");
-  const [model, setModel] = useState("gemini-2.0-flash-exp");
+  const [model, setModel] = useState("gemini-2.5-pro");
   const [isLoading, setIsLoading] = useState(false);
   const [showPaymentSuccess, setShowPaymentSuccess] = useState(false);
   const [checkingCredits, setCheckingCredits] = useState(false);

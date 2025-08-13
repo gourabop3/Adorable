@@ -99,7 +99,7 @@ export async function createApp({
 
     // Use selected model if provided, otherwise default builder agent
     const agentToUse = modelId
-      ? createBuilderAgentWithModel(google(modelId))
+      ? createBuilderAgentWithModel(modelId)
       : builderAgent;
 
     await sendMessageWithStreaming(agentToUse, app.id, mcpEphemeralUrl, fs, {

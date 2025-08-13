@@ -67,10 +67,14 @@ export async function POST(req: NextRequest) {
     repoId: app.info.gitRepo,
   });
 
+  // Get the selected model from the request headers or default to gemini-2.5-pro
+  const selectedModel = req.headers.get("x-selected-model") || "gemini-2.5-pro";
+  
   const resumableStream = await sendMessage(
     appId,
     mcpEphemeralUrl,
-    messages.at(-1)!
+    messages.at(-1)!,
+    selectedModel
   );
 
   return resumableStream.response();
@@ -79,7 +83,8 @@ export async function POST(req: NextRequest) {
 export async function sendMessage(
   appId: string,
   mcpUrl: string,
-  message: UIMessage
+  message: UIMessage,
+  modelId?: string
 ) {
   const mcp = new MCPClient({
     id: crypto.randomUUID(),
@@ -124,7 +129,10 @@ export async function sendMessage(
     threadId: appId,
   });
 
-  const stream = await builderAgent.stream([], {
+  // Use selected model or default to builderAgent
+  const agentToUse = modelId ? createBuilderAgentWithModel(modelId) : builderAgent;
+  
+  const stream = await agentToUse.stream([], {
     threadId: appId,
     resourceId: appId,
     maxSteps: 100,
