@@ -198,8 +198,21 @@ export function CustomUserButton() {
       )}
 
       {/* Stack Auth Components */}
-      {showSignIn && <SignIn />}
-      {showSignUp && <SignUp />}
+      {showSignIn && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black bg-opacity-50">
+          <div className="relative w-full max-w-md mx-4">
+            <SignIn fullPage={false} />
+          </div>
+        </div>
+      )}
+      
+      {showSignUp && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black bg-opacity-50">
+          <div className="relative w-full max-w-md mx-4">
+            <SignUp fullPage={false} />
+          </div>
+        </div>
+      )}
     </div>
   );
 }
