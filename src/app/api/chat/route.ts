@@ -120,13 +120,7 @@ export async function POST(req: NextRequest) {
     },
     async onStepFinish(step) {
       messageList.add(step.response.messages, "response");
-      if (shouldAbort) {
-        await redisPublisher.del(`app:${appId}:stream-state`);
-        controller.abort("Aborted stream after step finish");
-        const msgs = messageList.drainUnsavedMessages();
-        console.log(msgs);
-        await (await agent.getMemory())?.saveMessages({ messages: msgs });
-      }
+      // Removed the problematic abort logic that was causing mid-stream stops
     },
     onError: async (error) => {
       await mcp.disconnect();
