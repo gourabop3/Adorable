@@ -1,4 +1,4 @@
-import { setupAbortCallback, setStream as setResumableStream, stopStream as stopResumableStream } from "@/lib/internal/stream-manager";
+import { setupAbortCallback, setStream as setResumableStream, stopStream as stopResumableStream, getStream as getResumableStream } from "@/lib/internal/stream-manager";
 import { redis, redisPublisher } from "@/lib/internal/redis";
 import type { UIMessage } from "ai";
 
@@ -17,4 +17,8 @@ export async function setStream(
 
 export async function stopStream(appId: string) {
   await stopResumableStream(appId);
+}
+
+export async function getStream(appId: string) {
+  return await getResumableStream(appId);
 }
