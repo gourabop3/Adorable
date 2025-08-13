@@ -103,6 +103,8 @@ export class AIService {
       threadId: appId,
     });
 
+    console.log(`🚀 Starting agent stream for app ${appId} with maxSteps: ${options?.maxSteps ?? 100}`);
+    
     const stream = await agent.stream([], {
       threadId: appId,
       resourceId: appId,
@@ -116,20 +118,24 @@ export class AIService {
         ...freestyleToolsets,
       },
       async onChunk() {
+        console.log(`📡 Agent chunk received for app ${appId}`);
         options?.onChunk?.();
       },
       // eslint-disable-next-line @typescript-eslint/no-explicit-any
       async onStepFinish(step: { response: { messages: unknown[] } }) {
+        console.log(`✅ Agent step finished for app ${appId}, messages: ${step.response.messages?.length || 0}`);
         // eslint-disable-next-line @typescript-eslint/no-explicit-any
         messageList.add(step.response.messages as any, "response");
         options?.onStepFinish?.(step);
       },
       onError: async (error: { error: unknown }) => {
+        console.error(`❌ Agent error for app ${appId}:`, error);
         // Handle cleanup internally
         await mcp.disconnect();
         options?.onError?.(error);
       },
       onFinish: async () => {
+        console.log(`🎉 Agent stream finished for app ${appId}`);
         // Handle cleanup internally
         await mcp.disconnect();
         options?.onFinish?.();

@@ -98,16 +98,38 @@ export async function POST(req: NextRequest) {
   // Get the selected model from the request headers or default to gemini-2.5-pro
   const selectedModel = req.headers.get("x-selected-model") || "gemini-2.5-pro";
   
-  const resumableStream = await sendMessage(
-    appId,
-    mcpEphemeralUrl,
-    fs,
-    messages.at(-1)!,
-    selectedModel,
-    cacheKey
-  );
+  try {
+    console.log(`🚀 Starting AI stream for app ${appId} with model ${selectedModel}`);
+    
+    const resumableStream = await sendMessage(
+      appId,
+      mcpEphemeralUrl,
+      fs,
+      messages.at(-1)!,
+      selectedModel,
+      cacheKey
+    );
 
-  return resumableStream.response();
+    console.log(`✅ Stream created successfully for app ${appId}`);
+    return resumableStream.response();
+    
+  } catch (error) {
+    console.error(`❌ Failed to create stream for app ${appId}:`, error);
+    
+    // Clean up on error
+    await redisPublisher.del(`app:${appId}:stream-state`);
+    if (cacheKey) {
+      await redisPublisher.del(cacheKey);
+    }
+    
+    return new Response(
+      JSON.stringify({ 
+        error: "Failed to create AI stream", 
+        details: error instanceof Error ? error.message : "Unknown error" 
+      }), 
+      { status: 500, headers: { 'Content-Type': 'application/json' } }
+    );
+  }
 }
 
 export async function sendMessage(
@@ -121,32 +143,48 @@ export async function sendMessage(
   // Use selected model or default to gemini-2.5-pro
   const agentToUse = modelId ? createBuilderAgentWithModel(modelId) : createBuilderAgentWithModel("gemini-2.5-pro");
   
-  const response = await AIService.sendMessage(
-    agentToUse,
-    appId,
-    mcpUrl,
-    fs,
-    message,
-    {
-      threadId: appId,
-      resourceId: appId,
-      maxSteps: 100,
-      maxRetries: 3,
-      maxOutputTokens: 12000,
-      async onChunk() {
-        // Keep-alive logic is handled by AIService
-      },
-      async onStepFinish(step) {
-        // Step finish logic is handled by AIService
-      },
-      onError: async (error) => {
-        console.error("❌ Stream error:", error);
-        
-        try {
-          await redisPublisher.del(`app:${appId}:stream-state`);
-          if (cacheKey) {
-            await redisPublisher.del(cacheKey); // Clean up request deduplication
-          }
+  console.log(`🤖 Using agent with model: ${modelId || 'gemini-2.5-pro'}`);
+  
+  // Create an AbortController with a timeout to prevent infinite hanging
+  const abortController = new AbortController();
+  const timeoutId = setTimeout(() => {
+    console.log(`⏰ Timeout reached for app ${appId}, aborting stream`);
+    abortController.abort();
+  }, 30000); // 30 second timeout
+  
+  try {
+    const response = await AIService.sendMessage(
+      agentToUse,
+      appId,
+      mcpUrl,
+      fs,
+      message,
+      {
+        threadId: appId,
+        resourceId: appId,
+        maxSteps: 50, // Reduced to prevent infinite loops
+        maxRetries: 2, // Reduced retries
+        maxOutputTokens: 8000, // Reduced to prevent timeouts
+        async onChunk() {
+          console.log(`📡 Stream chunk received for app ${appId}`);
+          // Keep-alive logic is handled by AIService
+        },
+        async onStepFinish(step) {
+          console.log(`✅ Step finished for app ${appId}, messages: ${step.response.messages?.length || 0}`);
+          // Step finish logic is handled by AIService
+        },
+              abortSignal: abortController.signal,
+        onError: async (error) => {
+          console.error("❌ Stream error:", error);
+          
+          // Clear timeout on error
+          clearTimeout(timeoutId);
+          
+          try {
+            await redisPublisher.del(`app:${appId}:stream-state`);
+            if (cacheKey) {
+              await redisPublisher.del(cacheKey); // Clean up request deduplication
+            }
           
           // Enhanced error handling for quota issues
           if (error?.error?.message?.includes('quota') || error?.error?.message?.includes('429') || error?.error?.statusCode === 429) {
@@ -193,11 +231,14 @@ export async function sendMessage(
           console.error("❌ Error during cleanup:", cleanupError);
         }
       },
-      onFinish: async () => {
-        await redisPublisher.del(`app:${appId}:stream-state`);
-        if (cacheKey) {
-          await redisPublisher.del(cacheKey); // Clean up request deduplication
-        }
+              onFinish: async () => {
+          // Clear timeout on finish
+          clearTimeout(timeoutId);
+          
+          await redisPublisher.del(`app:${appId}:stream-state`);
+          if (cacheKey) {
+            await redisPublisher.del(cacheKey); // Clean up request deduplication
+          }
         
         // Deduct 1 credit for chat usage
         try {
@@ -238,7 +279,22 @@ export async function sendMessage(
     }
   );
 
-  console.log("Stream created for appId:", appId, "with prompt:", message);
+    console.log("Stream created for appId:", appId, "with prompt:", message);
 
-  return await setStream(appId, message, response.stream);
+    return await setStream(appId, message, response.stream);
+    
+  } catch (error) {
+    // Clear timeout on any error
+    clearTimeout(timeoutId);
+    
+    console.error(`❌ Error in sendMessage for app ${appId}:`, error);
+    
+    // Clean up on error
+    await redisPublisher.del(`app:${appId}:stream-state`);
+    if (cacheKey) {
+      await redisPublisher.del(cacheKey);
+    }
+    
+    throw error; // Re-throw to be handled by the caller
+  }
 }
