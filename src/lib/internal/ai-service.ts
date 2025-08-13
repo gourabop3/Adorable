@@ -110,13 +110,9 @@ export class AIService {
       maxRetries: options?.maxRetries ?? 0,
       maxOutputTokens: options?.maxOutputTokens ?? Number(process.env.MAX_OUTPUT_TOKENS ?? "24000"),
       toolsets: {
-        ...(process.env.MORPH_API_KEY
-          ? {
-              morph: {
-                edit_file: morphTool(fs),
-              },
-            }
-          : {}),
+        morph: {
+          edit_file: morphTool(fs),
+        },
         ...freestyleToolsets,
       },
       async onChunk() {
