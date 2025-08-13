@@ -5,10 +5,11 @@ import { useBilling } from "@/contexts/billing-context";
 import { CreditCheck } from "./credit-check";
 import { CreditHistory } from "./credit-history";
 import { Crown, Coins, Settings, LogOut, ChevronDown, User, LogIn, Plus } from "lucide-react";
-import { SignIn, SignUp } from "@stackframe/stack";
+import { SignIn, SignUp, useUser } from "@stackframe/stack";
 
 export function CustomUserButton() {
   const { billing, isAuthenticated } = useBilling();
+  const { auth } = useUser();
   const [showDropdown, setShowDropdown] = useState(false);
   const [showCreditCheck, setShowCreditCheck] = useState(false);
   const [showCreditHistory, setShowCreditHistory] = useState(false);
@@ -130,7 +131,12 @@ export function CustomUserButton() {
 
                 {/* Logout */}
                 <button
-                  onClick={() => setShowDropdown(false)}
+                  onClick={() => {
+                    setShowDropdown(false);
+                    if (auth) {
+                      auth.signOut();
+                    }
+                  }}
                   className="w-full flex items-center gap-3 px-4 py-2 text-left hover:bg-gray-50 dark:hover:bg-gray-800 transition-colors text-red-600"
                 >
                   <LogOut className="h-4 w-4" />
@@ -207,7 +213,7 @@ export function CustomUserButton() {
       )}
       
       {showSignUp && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black bg-opacity-50">
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-white">
           <div className="relative w-full max-w-md mx-4">
             <SignUp fullPage={false} />
           </div>

@@ -41,6 +41,11 @@ function HomeContent() {
     useEffect(() => {
       if (success && !showPaymentSuccess) {
         setShowPaymentSuccess(true);
+        // Auto-hide the banner after 10 seconds
+        const timer = setTimeout(() => {
+          setShowPaymentSuccess(false);
+        }, 10000);
+        return () => clearTimeout(timer);
       }
     }, [success, showPaymentSuccess]);
 

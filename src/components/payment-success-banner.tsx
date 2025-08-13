@@ -28,7 +28,10 @@ export function PaymentSuccessBanner({ plan, credits, onClose }: PaymentSuccessB
         <Button
           variant="ghost"
           size="sm"
-          onClick={onClose}
+          onClick={() => {
+            console.log('Closing payment success banner');
+            onClose();
+          }}
           className="h-6 w-6 p-0 text-green-600 hover:text-green-800 hover:bg-green-100"
         >
           <X className="h-4 w-4" />
