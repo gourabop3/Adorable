@@ -181,12 +181,15 @@ async function handleCheckoutSessionCompleted(session: Stripe.Checkout.Session) 
       
       if (userId && credits > 0) {
         // Add credits to user
-        await db.update(users)
-          .set({ 
-            credits: db.raw(`credits + ${credits}`),
-            updatedAt: new Date()
-          })
-          .where(eq(users.id, userId));
+        const currentUser = await db.select().from(users).where(eq(users.id, userId)).limit(1);
+        if (currentUser[0]) {
+          await db.update(users)
+            .set({ 
+              credits: currentUser[0].credits + credits,
+              updatedAt: new Date()
+            })
+            .where(eq(users.id, userId));
+        }
 
         // Record credit transaction
         await db.insert(creditTransactions).values({

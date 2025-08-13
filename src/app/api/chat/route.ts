@@ -246,12 +246,15 @@ export async function sendMessage(
           const { eq } = await import("drizzle-orm");
           
           // Deduct 1 credit from user
-          await db.update(users)
-            .set({ 
-              credits: db.raw(`credits - 1`),
-              updatedAt: new Date()
-            })
-            .where(eq(users.id, user.userId));
+          const currentUser = await db.select().from(users).where(eq(users.id, user.userId)).limit(1);
+          if (currentUser[0]) {
+            await db.update(users)
+              .set({ 
+                credits: currentUser[0].credits - 1,
+                updatedAt: new Date()
+              })
+              .where(eq(users.id, user.userId));
+          }
 
           // Record credit transaction
           await db.insert(creditTransactions).values({

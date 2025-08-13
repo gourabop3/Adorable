@@ -42,7 +42,7 @@ export async function POST(req: NextRequest) {
     // Deduct credits from user
     await db.update(users)
       .set({ 
-        credits: db.raw(`credits - ${credits}`),
+        credits: dbUser.credits - credits,
         updatedAt: new Date()
       })
       .where(eq(users.id, user.userId));
