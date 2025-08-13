@@ -8,7 +8,7 @@ import LogoSvg from "@/logo.svg";
 import { useState, useEffect } from "react";
 import { Button } from "@/components/ui/button";
 import { ExampleButton } from "@/components/ExampleButton";
-import { UserButtonWithBilling } from "@/components/user-button-with-billing";
+import { CustomUserButton } from "@/components/custom-user-button";
 import { UserApps } from "@/components/user-apps";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { PromptInputTextareaWithTypingAnimation } from "@/components/prompt-input";
@@ -170,7 +170,7 @@ function HomeContent() {
             className="w-8 h-8 sm:w-9 sm:h-9"
           />
           <div className="flex items-center gap-2 flex-1 sm:w-80 justify-end">
-            <UserButtonWithBilling />
+            <CustomUserButton />
           </div>
         </div>
 

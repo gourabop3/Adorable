@@ -31,9 +31,14 @@ export async function POST(req: NextRequest) {
     }
 
     // Get or create user in database
-    let dbUser = await db.query.users.findFirst({
-      where: eq(users.id, user.userId),
-    });
+    let dbUser;
+    try {
+      dbUser = await db.select().from(users).where(eq(users.id, user.userId)).limit(1);
+      dbUser = dbUser[0];
+    } catch (dbError) {
+      console.error('Database query error:', dbError);
+      return NextResponse.json({ error: 'Database connection failed' }, { status: 500 });
+    }
 
     if (!dbUser) {
       // Create new user with 50 free credits

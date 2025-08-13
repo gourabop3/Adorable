@@ -26,9 +26,14 @@ export async function GET() {
     console.log('Billing API: Fetching data for user:', user.userId);
 
     // Get user data
-    let dbUser = await db.query.users.findFirst({
-      where: eq(users.id, user.userId),
-    });
+    let dbUser;
+    try {
+      dbUser = await db.select().from(users).where(eq(users.id, user.userId)).limit(1);
+      dbUser = dbUser[0];
+    } catch (dbError) {
+      console.error('Database query error:', dbError);
+      return NextResponse.json({ error: 'Database connection failed' }, { status: 500 });
+    }
 
     console.log('Billing API: Found user in database:', dbUser ? {
       id: dbUser.id,
@@ -67,9 +72,14 @@ export async function GET() {
     }
 
     // Get subscription data
-    const subscription = await db.query.subscriptions.findFirst({
-      where: eq(subscriptions.userId, dbUser.id),
-    });
+    let subscription;
+    try {
+      subscription = await db.select().from(subscriptions).where(eq(subscriptions.userId, dbUser.id)).limit(1);
+      subscription = subscription[0];
+    } catch (dbError) {
+      console.error('Database subscription query error:', dbError);
+      subscription = null; // Continue without subscription data
+    }
 
     console.log('Billing API: Found subscription:', subscription ? {
       id: subscription.id,

@@ -18,9 +18,14 @@ export async function POST(req: NextRequest) {
     }
 
     // Get user's current credit balance
-    const dbUser = await db.query.users.findFirst({
-      where: eq(users.id, user.userId),
-    });
+    let dbUser;
+    try {
+      dbUser = await db.select().from(users).where(eq(users.id, user.userId)).limit(1);
+      dbUser = dbUser[0];
+    } catch (dbError) {
+      console.error('Database query error:', dbError);
+      return NextResponse.json({ error: 'Database connection failed' }, { status: 500 });
+    }
 
     if (!dbUser) {
       return NextResponse.json({ error: 'User not found' }, { status: 404 });

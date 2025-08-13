@@ -12,11 +12,16 @@ export async function GET(req: NextRequest) {
     }
 
     // Get user's credit transactions, ordered by most recent first
-    const transactions = await db.query.creditTransactions.findMany({
-      where: eq(creditTransactions.userId, user.userId),
-      orderBy: [desc(creditTransactions.createdAt)],
-      limit: 100, // Limit to last 100 transactions
-    });
+    let transactions;
+    try {
+      transactions = await db.select().from(creditTransactions)
+        .where(eq(creditTransactions.userId, user.userId))
+        .orderBy(desc(creditTransactions.createdAt))
+        .limit(100); // Limit to last 100 transactions
+    } catch (dbError) {
+      console.error('Database query error:', dbError);
+      return NextResponse.json({ error: 'Database connection failed' }, { status: 500 });
+    }
 
     return NextResponse.json({ 
       success: true,
