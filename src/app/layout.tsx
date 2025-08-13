@@ -18,8 +18,8 @@ const geistMono = Geist_Mono({
 });
 
 export const metadata: Metadata = {
-  title: "Adorable",
-  description: "Open Source AI App Builder",
+  title: "VIBE - AI Website Builder",
+  description: "Build stunning, professional websites with AI. No coding required. Transform your ideas into reality in seconds.",
   manifest: "/manifest.json",
   // viewport: {
   //   width: "device-width",

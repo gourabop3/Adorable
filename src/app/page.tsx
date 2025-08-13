@@ -16,6 +16,8 @@ import { BillingProvider, useBilling } from "@/contexts/billing-context";
 import { PaymentSuccessBanner } from "@/components/payment-success-banner";
 import { ModelSelector } from "@/components/model-selector";
 import { CreditBalanceBanner } from "@/components/credit-balance-banner";
+import { Footer } from "@/components/footer";
+import { Navigation } from "@/components/navigation";
 
 const queryClient = new QueryClient();
 
@@ -143,19 +145,17 @@ function HomeContent() {
 
   return (
     <QueryClientProvider client={queryClient}>
+      <Navigation />
       <main className="min-h-screen p-4 relative">
         <div className="flex w-full justify-between items-center">
-          <h1 className="text-sm sm:text-lg font-bold flex-1 sm:w-80">
-            <a href="https://www.freestyle.sh" className="hover:underline">freestyle.sh</a>
-          </h1>
-          <Image
-            className="dark:invert mx-2"
-            src={LogoSvg}
-            alt="Adorable Logo"
-            width={32}
-            height={32}
-            className="w-8 h-8 sm:w-9 sm:h-9"
-          />
+          <div className="flex items-center space-x-2">
+            <div className="w-8 h-8 bg-gradient-to-r from-purple-600 to-blue-600 rounded-lg flex items-center justify-center">
+              <span className="text-white font-bold text-lg">V</span>
+            </div>
+            <span className="text-xl font-bold bg-gradient-to-r from-purple-600 to-blue-600 bg-clip-text text-transparent">
+              VIBE
+            </span>
+          </div>
           <div className="flex items-center gap-2 flex-1 sm:w-80 justify-end">
             <CustomUserButton />
           </div>
@@ -172,7 +172,11 @@ function HomeContent() {
         <div>
           <div className="w-full max-w-lg px-4 sm:px-0 mx-auto flex flex-col items-center mt-12 sm:mt-16 md:mt-24 lg:mt-32 col-start-1 col-end-1 row-start-1 row-end-1 z-10">
             <p className="text-neutral-600 text-center mb-4 sm:mb-6 text-2xl sm:text-3xl md:text-4xl lg:text-5xl font-bold">
-              Let AI Cook
+              Build Websites with AI
+            </p>
+            <p className="text-lg text-neutral-500 text-center mb-8 max-w-2xl mx-auto">
+              Transform your ideas into stunning, professional websites in seconds. 
+              No coding required. Just describe what you want and watch it come to life.
             </p>
 
             {/* Credit Balance Banner */}
@@ -203,8 +207,8 @@ function HomeContent() {
                         disabled={isLoading || !prompt.trim()}
                         className="h-8 sm:h-7 text-xs w-full sm:w-auto"
                       >
-                        <span className="hidden sm:inline">Start Creating ⏎</span>
-                        <span className="sm:hidden">Create App ⏎</span>
+                        <span className="hidden sm:inline">Build Website ⏎</span>
+                        <span className="sm:hidden">Build Website ⏎</span>
                       </Button>
                     </PromptInputActions>
                   </PromptInput>
@@ -213,21 +217,23 @@ function HomeContent() {
             </div>
             <Examples setPrompt={setPrompt} />
             <div className="mt-6 sm:mt-8 mb-12 sm:mb-16">
-              <a
-                href="https://freestyle.sh"
-                className="border rounded-md px-3 sm:px-4 py-2 mt-4 text-sm font-semibold transition-colors duration-200 ease-in-out cursor-pointer w-full max-w-72 text-center block hover:bg-gray-50 dark:hover:bg-gray-800"
-              >
-                <span className="block font-bold text-sm sm:text-base">
-                  By <span className="underline">freestyle.sh</span>
-                </span>
-                <span className="text-xs">JavaScript infrastructure for AI.</span>
-              </a>
+              <div className="text-center">
+                <p className="text-sm text-gray-500 mb-4">
+                  Trusted by thousands of creators worldwide
+                </p>
+                <div className="flex justify-center space-x-6 text-xs text-gray-400">
+                  <span>⚡ Lightning Fast</span>
+                  <span>🎨 Beautiful Design</span>
+                  <span>🔒 Secure & Reliable</span>
+                </div>
+              </div>
             </div>
           </div>
         </div>
         <div className="border-t py-8 mx-0 sm:-mx-4">
           <UserApps />
         </div>
+        <Footer />
       </main>
     </QueryClientProvider>
   );
@@ -246,24 +252,24 @@ function Examples({ setPrompt }: { setPrompt: (text: string) => void }) {
     <div className="mt-2">
       <div className="flex flex-col sm:flex-row flex-wrap justify-center gap-2 px-2">
         <ExampleButton
-          text="Dog Food Marketplace"
-          promptText="Build a dog food marketplace where users can browse and purchase premium dog food."
+          text="E-commerce Store"
+          promptText="Build a modern e-commerce website with product catalog, shopping cart, and payment integration."
           onClick={(text) => {
             console.log("Example clicked:", text);
             setPrompt(text);
           }}
         />
         <ExampleButton
-          text="Personal Website"
-          promptText="Create a personal website with portfolio, blog, and contact sections."
+          text="Business Website"
+          promptText="Create a professional business website with company information, services, and contact forms."
           onClick={(text) => {
             console.log("Example clicked:", text);
             setPrompt(text);
           }}
         />
         <ExampleButton
-          text="Burrito B2B SaaS"
-          promptText="Build a B2B SaaS for burrito shops to manage inventory, orders, and delivery logistics."
+          text="Portfolio Site"
+          promptText="Build a stunning portfolio website to showcase my work, skills, and professional experience."
           onClick={(text) => {
             console.log("Example clicked:", text);
             setPrompt(text);
