@@ -3,6 +3,8 @@ import { freestyle } from "@/lib/freestyle";
 import { getAppIdFromHeaders } from "@/lib/utils";
 import { MCPClient } from "@mastra/mcp";
 import { UIMessage } from "ai";
+import { streamText } from "ai";
+import { createStreamableUI } from "ai/ui";
 
 // "fix" mastra mcp bug
 import { EventEmitter } from "events";
@@ -105,45 +107,70 @@ export async function POST(req: NextRequest) {
   let lastKeepAlive = Date.now();
   const messageList = new MessageList({ resourceId: appId, threadId: appId });
 
-  const stream = await agent.stream([], {
-    threadId: appId,
-    resourceId: appId,
-    maxSteps: 100,
-    maxRetries: 0,
-    maxOutputTokens: Number(process.env.MAX_OUTPUT_TOKENS ?? "24000"),
-    toolsets,
-    async onChunk() {
-      if (Date.now() - lastKeepAlive > 5000) {
-        lastKeepAlive = Date.now();
-        redisPublisher.set(`app:${appId}:stream-state`, "running", { EX: 15 });
-      }
-    },
-    async onStepFinish(step) {
-      messageList.add(step.response.messages, "response");
-      if (shouldAbort) {
+  // Create a streamable UI for real-time updates
+  const ui = createStreamableUI();
+
+  try {
+    // Set stream state to running
+    await redisPublisher.set(`app:${appId}:stream-state`, "running", { EX: 30 });
+
+    const stream = await agent.stream([], {
+      threadId: appId,
+      resourceId: appId,
+      maxSteps: 100,
+      maxRetries: 0,
+      maxOutputTokens: Number(process.env.MAX_OUTPUT_TOKENS ?? "24000"),
+      toolsets,
+      async onChunk() {
+        if (Date.now() - lastKeepAlive > 5000) {
+          lastKeepAlive = Date.now();
+          await redisPublisher.set(`app:${appId}:stream-state`, "running", { EX: 15 });
+        }
+      },
+      async onStepFinish(step) {
+        messageList.add(step.response.messages, "response");
+        
+        // Stream the response content in real-time
+        const content = step.response.messages[0]?.content;
+        if (content && typeof content === 'string') {
+          ui.append(content);
+        }
+        
+        if (shouldAbort) {
+          await redisPublisher.del(`app:${appId}:stream-state`);
+          controller.abort("Aborted stream after step finish");
+          const msgs = messageList.drainUnsavedMessages();
+          console.log(msgs);
+          await (await agent.getMemory())?.saveMessages({ messages: msgs });
+        }
+      },
+      onError: async (error) => {
+        await mcp.disconnect();
         await redisPublisher.del(`app:${appId}:stream-state`);
-        controller.abort("Aborted stream after step finish");
-        const msgs = messageList.drainUnsavedMessages();
-        console.log(msgs);
-        await (await agent.getMemory())?.saveMessages({ messages: msgs });
-      }
-    },
-    onError: async (error) => {
-      await mcp.disconnect();
-      await redisPublisher.del(`app:${appId}:stream-state`);
-      await redisPublisher.del(cacheKey);
-      console.error("Stream error:", error);
-    },
-    onFinish: async () => {
-      await redisPublisher.del(`app:${appId}:stream-state`);
-      await redisPublisher.del(cacheKey);
-      await mcp.disconnect();
-    },
-    abortSignal: controller.signal,
-  });
+        await redisPublisher.del(cacheKey);
+        console.error("Stream error:", error);
+        ui.error("An error occurred while processing your request");
+      },
+      onFinish: async () => {
+        await redisPublisher.del(`app:${appId}:stream-state`);
+        await redisPublisher.del(cacheKey);
+        await mcp.disconnect();
+        ui.done();
+      },
+      abortSignal: controller.signal,
+    });
 
-  console.log("Stream created for appId:", appId, "with prompt:", messages.at(-1));
+    console.log("Stream created for appId:", appId, "with prompt:", messages.at(-1));
 
-  const resumable = await setStream(appId, messages.at(-1)!, stream);
-  return resumable.response();
+    // Return the streamable UI response
+    return ui.toDataStreamResponse();
+
+  } catch (error) {
+    console.error("Error in chat stream:", error);
+    await redisPublisher.del(`app:${appId}:stream-state`);
+    await redisPublisher.del(cacheKey);
+    await mcp.disconnect();
+    ui.error("Failed to start chat stream");
+    return ui.toDataStreamResponse();
+  }
 }

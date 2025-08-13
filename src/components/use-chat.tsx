@@ -1,7 +1,7 @@
-import { useChat } from "@ai-sdk/react";
+import { useChat } from "ai/react";
 import { useEffect, useRef } from "react";
 
-// Modern chat hook with improved stream management and error handling
+// Modern chat hook using Vercel AI SDK with improved stream management and error handling
 export function useChatSafe(
   options: Parameters<typeof useChat>[0] & { 
     id: string; 
@@ -40,6 +40,9 @@ export function useChatSafe(
       retries: 3,
       backoff: (retryCount: number) => Math.min(1000 * 2 ** retryCount, 10000),
     },
+    // Enable experimental streaming features for better code streaming
+    experimental_streamData: true,
+    experimental_onFunctionCall: options.experimental_onFunctionCall,
   });
 
   useEffect(() => {
