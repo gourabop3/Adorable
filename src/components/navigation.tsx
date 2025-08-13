@@ -1,6 +1,8 @@
 import Link from "next/link";
 import { CustomUserButton } from "@/components/custom-user-button";
 
+// Navigation component for VIBE website
+
 export function Navigation() {
   return (
     <nav className="bg-white border-b sticky top-0 z-50">
