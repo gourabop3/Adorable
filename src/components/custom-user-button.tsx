@@ -1,17 +1,19 @@
 "use client";
 
 import { useState, useRef, useEffect } from "react";
-import { UserButton } from "@stackframe/stack";
 import { useBilling } from "@/contexts/billing-context";
 import { CreditCheck } from "./credit-check";
 import { CreditHistory } from "./credit-history";
-import { Crown, Coins, Settings, LogOut, ChevronDown, User } from "lucide-react";
+import { Crown, Coins, Settings, LogOut, ChevronDown, User, LogIn, Plus } from "lucide-react";
+import { SignIn, SignUp } from "@stackframe/stack";
 
 export function CustomUserButton() {
   const { billing, isAuthenticated } = useBilling();
   const [showDropdown, setShowDropdown] = useState(false);
   const [showCreditCheck, setShowCreditCheck] = useState(false);
   const [showCreditHistory, setShowCreditHistory] = useState(false);
+  const [showSignIn, setShowSignIn] = useState(false);
+  const [showSignUp, setShowSignUp] = useState(false);
   const dropdownRef = useRef<HTMLDivElement>(null);
 
   // Close dropdown when clicking outside
@@ -38,7 +40,11 @@ export function CustomUserButton() {
         className="flex items-center gap-2 p-2 rounded-lg hover:bg-gray-100 dark:hover:bg-gray-800 transition-colors"
       >
         {isAuthenticated ? (
-          <UserButton />
+          <div className="w-8 h-8 bg-blue-500 rounded-full flex items-center justify-center">
+            <span className="text-white font-semibold text-sm">
+              {billing?.name?.charAt(0) || 'U'}
+            </span>
+          </div>
         ) : (
           <div className="w-8 h-8 bg-gray-200 rounded-full flex items-center justify-center">
             <User className="h-4 w-4 text-gray-600" />
@@ -150,10 +156,11 @@ export function CustomUserButton() {
                   <button
                     onClick={() => {
                       setShowDropdown(false);
-                      // This will trigger the Stack Auth sign in
+                      setShowSignIn(true);
                     }}
                     className="w-full flex items-center justify-center gap-2 px-4 py-2 bg-purple-600 hover:bg-purple-700 text-white rounded-lg transition-colors"
                   >
+                    <LogIn className="h-4 w-4" />
                     <span>Sign In</span>
                   </button>
                   
@@ -161,10 +168,11 @@ export function CustomUserButton() {
                   <button
                     onClick={() => {
                       setShowDropdown(false);
-                      // This will trigger the Stack Auth sign up
+                      setShowSignUp(true);
                     }}
                     className="w-full flex items-center justify-center gap-2 px-4 py-2 border border-purple-600 text-purple-600 hover:bg-purple-50 rounded-lg transition-colors"
                   >
+                    <Plus className="h-4 w-4" />
                     <span>Get Started</span>
                   </button>
                 </div>
@@ -188,6 +196,10 @@ export function CustomUserButton() {
           onClose={() => setShowCreditHistory(false)}
         />
       )}
+
+      {/* Stack Auth Components */}
+      {showSignIn && <SignIn />}
+      {showSignUp && <SignUp />}
     </div>
   );
 }
