@@ -21,6 +21,11 @@ A modern AI-powered app builder with real-time streaming and beautiful UI genera
 3. Run the development server: `npm run dev`
 4. Open [http://localhost:3000](http://localhost:3000) in your browser
 
+## Production
+
+- Build: `npm run build`
+- Start: `npm run start`
+
 ## Tech Stack
 
 - Next.js 15
