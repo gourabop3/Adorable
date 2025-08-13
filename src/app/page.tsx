@@ -3,12 +3,9 @@
 import { useRouter, useSearchParams } from "next/navigation";
 import { PromptInput, PromptInputActions } from "@/components/ui/prompt-input";
 import { FrameworkSelector } from "@/components/framework-selector";
-import Image from "next/image";
-import LogoSvg from "@/logo.svg";
 import { useState, useEffect } from "react";
 import { Button } from "@/components/ui/button";
 import { ExampleButton } from "@/components/ExampleButton";
-import { CustomUserButton } from "@/components/custom-user-button";
 import { UserApps } from "@/components/user-apps";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { PromptInputTextareaWithTypingAnimation } from "@/components/prompt-input";
@@ -147,19 +144,6 @@ function HomeContent() {
     <QueryClientProvider client={queryClient}>
       <Navigation />
       <main className="min-h-screen p-4 relative">
-        <div className="flex w-full justify-between items-center">
-          <div className="flex items-center space-x-2">
-            <div className="w-8 h-8 bg-gradient-to-r from-purple-600 to-blue-600 rounded-lg flex items-center justify-center">
-              <span className="text-white font-bold text-lg">V</span>
-            </div>
-            <span className="text-xl font-bold bg-gradient-to-r from-purple-600 to-blue-600 bg-clip-text text-transparent">
-              VIBE
-            </span>
-          </div>
-          <div className="flex items-center gap-2 flex-1 sm:w-80 justify-end">
-            <CustomUserButton />
-          </div>
-        </div>
 
         {showPaymentSuccess && (
           <PaymentSuccessBanner
