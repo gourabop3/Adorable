@@ -51,6 +51,9 @@ export async function POST(req: NextRequest) {
       case 'invoice.payment_failed':
         await handlePaymentFailure(event.data.object as Stripe.Invoice);
         break;
+      case 'checkout.session.completed':
+        await handleCheckoutSessionCompleted(event.data.object as Stripe.Checkout.Session);
+        break;
       default:
         console.log(`Unhandled event type: ${event.type}`);
     }
@@ -167,5 +170,37 @@ async function handlePaymentFailure(invoice: Stripe.Invoice) {
     }
   } catch (error) {
     console.error('Error handling payment failure:', error);
+  }
+}
+
+async function handleCheckoutSessionCompleted(session: Stripe.Checkout.Session) {
+  try {
+    if (session.metadata?.type === 'credit_purchase') {
+      const userId = session.metadata.userId;
+      const credits = parseInt(session.metadata.credits || '0');
+      
+      if (userId && credits > 0) {
+        // Add credits to user
+        await db.update(users)
+          .set({ 
+            credits: db.raw(`credits + ${credits}`),
+            updatedAt: new Date()
+          })
+          .where(eq(users.id, userId));
+
+        // Record credit transaction
+        await db.insert(creditTransactions).values({
+          userId,
+          amount: credits,
+          description: `Purchased ${credits} credits`,
+          type: 'purchase',
+          stripePaymentIntentId: session.payment_intent as string,
+        });
+
+        console.log(`Added ${credits} credits to user ${userId}`);
+      }
+    }
+  } catch (error) {
+    console.error('Error handling checkout session completion:', error);
   }
 }

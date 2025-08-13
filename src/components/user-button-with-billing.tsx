@@ -4,11 +4,15 @@ import { UserButton } from "@stackframe/stack";
 import { useBilling } from "@/contexts/billing-context";
 import { CreditDisplay } from "./credit-display";
 import { CreditCheck } from "./credit-check";
+import { CreditPurchase } from "./credit-purchase";
+import { CreditHistory } from "./credit-history";
 import { useState } from "react";
 
 export function UserButtonWithBilling() {
   const { billing, isAuthenticated } = useBilling();
   const [showCreditCheck, setShowCreditCheck] = useState(false);
+  const [showCreditPurchase, setShowCreditPurchase] = useState(false);
+  const [showCreditHistory, setShowCreditHistory] = useState(false);
 
   if (!isAuthenticated) {
     return <UserButton />;
@@ -20,6 +24,8 @@ export function UserButtonWithBilling() {
         credits={billing?.credits || 0} 
         plan={billing?.plan || 'free'}
         onUpgradeClick={() => setShowCreditCheck(true)}
+        onPurchaseCredits={() => setShowCreditPurchase(true)}
+        onShowHistory={() => setShowCreditHistory(true)}
       />
       <UserButton />
       
@@ -28,6 +34,19 @@ export function UserButtonWithBilling() {
           onClose={() => setShowCreditCheck(false)}
           currentCredits={billing?.credits || 0}
           currentPlan={billing?.plan || 'free'}
+        />
+      )}
+      
+      {showCreditPurchase && (
+        <CreditPurchase
+          onClose={() => setShowCreditPurchase(false)}
+          currentCredits={billing?.credits || 0}
+        />
+      )}
+      
+      {showCreditHistory && (
+        <CreditHistory
+          onClose={() => setShowCreditHistory(false)}
         />
       )}
     </div>

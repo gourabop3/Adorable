@@ -15,6 +15,7 @@ import { PromptInputTextareaWithTypingAnimation } from "@/components/prompt-inpu
 import { BillingProvider, useBilling } from "@/contexts/billing-context";
 import { PaymentSuccessBanner } from "@/components/payment-success-banner";
 import { ModelSelector } from "@/components/model-selector";
+import { CreditBalanceBanner } from "@/components/credit-balance-banner";
 
 const queryClient = new QueryClient();
 
@@ -92,15 +93,47 @@ function HomeContent() {
 
     try {
       // Check if user has enough credits before proceeding
-      if (billing && billing.credits < 5) {
-        console.log(`[${requestId}] Insufficient credits, redirecting to upgrade`);
-        // Redirect to upgrade page with current parameters
-        const upgradeUrl = new URL('/billing', window.location.origin);
-        upgradeUrl.searchParams.set('redirect', encodeURIComponent(window.location.pathname + window.location.search));
-        upgradeUrl.searchParams.set('prompt', prompt);
-        upgradeUrl.searchParams.set('framework', framework);
-        upgradeUrl.searchParams.set('model', model);
-        window.location.href = upgradeUrl.toString();
+      if (billing && billing.credits < 1) {
+        console.log(`[${requestId}] Insufficient credits, redirecting to credit purchase`);
+        // Show credit purchase modal or redirect
+        alert('You need at least 1 credit to create an app. Please purchase credits to continue.');
+        return;
+      }
+
+      // Deduct 1 credit for app creation
+      try {
+        const creditResponse = await fetch('/api/credits/use', {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+          },
+          body: JSON.stringify({
+            credits: 1,
+            description: `Created app with ${model} model`,
+            appId: requestId,
+          }),
+        });
+
+        if (!creditResponse.ok) {
+          const errorData = await creditResponse.json();
+          if (errorData.error === 'Insufficient credits') {
+            alert(`Insufficient credits. You have ${errorData.currentCredits} credits but need ${errorData.requiredCredits}. Please purchase more credits.`);
+            return;
+          }
+          throw new Error('Failed to deduct credits');
+        }
+
+        const creditData = await creditResponse.json();
+        console.log(`[${requestId}] Credits deducted successfully. Remaining: ${creditData.remainingCredits}`);
+        
+        // Update billing context with new credit balance
+        if (billing) {
+          // This will trigger a re-render with updated credits
+          window.location.reload();
+        }
+      } catch (error) {
+        console.error(`[${requestId}] Error deducting credits:`, error);
+        alert('Failed to process credit deduction. Please try again.');
         return;
       }
 
@@ -153,6 +186,9 @@ function HomeContent() {
             <p className="text-neutral-600 text-center mb-6 text-3xl sm:text-4xl md:text-5xl font-bold">
               Let AI Cook
             </p>
+
+            {/* Credit Balance Banner */}
+            <CreditBalanceBanner />
 
             <div className="w-full relative my-5">
               <div className="relative w-full max-w-full overflow-hidden">

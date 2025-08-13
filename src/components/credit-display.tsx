@@ -1,15 +1,17 @@
 "use client";
 
-import { Coins, Crown } from "lucide-react";
+import { Coins, Crown, Plus, History } from "lucide-react";
 import { Button } from "./ui/button";
 
 interface CreditDisplayProps {
   credits: number;
   plan: 'free' | 'pro';
   onUpgradeClick: () => void;
+  onPurchaseCredits: () => void;
+  onShowHistory: () => void;
 }
 
-export function CreditDisplay({ credits, plan, onUpgradeClick }: CreditDisplayProps) {
+export function CreditDisplay({ credits, plan, onUpgradeClick, onPurchaseCredits, onShowHistory }: CreditDisplayProps) {
   const isLowCredits = credits < 10;
   const isPro = plan === 'pro';
 
@@ -28,6 +30,26 @@ export function CreditDisplay({ credits, plan, onUpgradeClick }: CreditDisplayPr
           <span className="font-medium">Pro</span>
         </div>
       )}
+      
+      <Button
+        variant="outline"
+        size="sm"
+        onClick={onShowHistory}
+        className="h-7 px-2 text-xs"
+      >
+        <History className="h-3 w-3 mr-1" />
+        History
+      </Button>
+      
+      <Button
+        variant="outline"
+        size="sm"
+        onClick={onPurchaseCredits}
+        className="h-7 px-2 text-xs"
+      >
+        <Plus className="h-3 w-3 mr-1" />
+        Buy Credits
+      </Button>
       
       {!isPro && (
         <Button
