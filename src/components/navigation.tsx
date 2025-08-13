@@ -1,5 +1,4 @@
 import Link from "next/link";
-import { Button } from "@/components/ui/button";
 import { CustomUserButton } from "@/components/custom-user-button";
 
 export function Navigation() {
@@ -33,14 +32,8 @@ export function Navigation() {
             </Link>
           </div>
 
-          {/* Right Side */}
-          <div className="flex items-center space-x-4">
-            <Button variant="ghost" size="sm">
-              Sign In
-            </Button>
-            <Button className="bg-purple-600 hover:bg-purple-700">
-              Get Started
-            </Button>
+          {/* Right Side - Only CustomUserButton */}
+          <div className="flex items-center">
             <CustomUserButton />
           </div>
         </div>

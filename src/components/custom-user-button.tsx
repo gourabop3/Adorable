@@ -5,7 +5,7 @@ import { UserButton } from "@stackframe/stack";
 import { useBilling } from "@/contexts/billing-context";
 import { CreditCheck } from "./credit-check";
 import { CreditHistory } from "./credit-history";
-import { Crown, Coins, Settings, LogOut, ChevronDown } from "lucide-react";
+import { Crown, Coins, Settings, LogOut, ChevronDown, User } from "lucide-react";
 
 export function CustomUserButton() {
   const { billing, isAuthenticated } = useBilling();
@@ -26,9 +26,7 @@ export function CustomUserButton() {
     return () => document.removeEventListener("mousedown", handleClickOutside);
   }, []);
 
-  if (!isAuthenticated) {
-    return <UserButton />;
-  }
+  // Always show the dropdown button, but handle content based on auth state
 
   const isPro = billing?.plan === 'pro';
 
@@ -39,92 +37,140 @@ export function CustomUserButton() {
         onClick={() => setShowDropdown(!showDropdown)}
         className="flex items-center gap-2 p-2 rounded-lg hover:bg-gray-100 dark:hover:bg-gray-800 transition-colors"
       >
-        <UserButton />
+        {isAuthenticated ? (
+          <UserButton />
+        ) : (
+          <div className="w-8 h-8 bg-gray-200 rounded-full flex items-center justify-center">
+            <User className="h-4 w-4 text-gray-600" />
+          </div>
+        )}
         <ChevronDown className="h-4 w-4 text-gray-500" />
       </button>
 
       {/* Dropdown Menu */}
       {showDropdown && (
         <div className="absolute right-0 top-full mt-2 w-64 bg-white dark:bg-gray-900 border border-gray-200 dark:border-gray-700 rounded-lg shadow-lg z-50">
-          {/* User Info Section */}
-          <div className="p-4 border-b border-gray-200 dark:border-gray-700">
-            <div className="flex items-center gap-3">
-              <div className="w-10 h-10 bg-blue-500 rounded-full flex items-center justify-center text-white font-semibold">
-                {billing?.name?.charAt(0) || 'U'}
-              </div>
-              <div className="flex-1 min-w-0">
-                <p className="font-semibold text-gray-900 dark:text-white truncate">
-                  {billing?.name || 'User'}
-                </p>
-                <p className="text-sm text-gray-500 dark:text-gray-400 truncate">
-                  {billing?.email || 'user@example.com'}
-                </p>
-              </div>
-            </div>
-            
-            {/* Credit Display */}
-            <div className="mt-3 flex items-center justify-between">
-              <div className="flex items-center gap-2">
-                <Coins className="h-4 w-4 text-yellow-500" />
-                <span className="text-sm font-medium">
-                  {billing?.credits || 0} credits
-                </span>
-              </div>
-              {isPro && (
-                <div className="flex items-center gap-1 text-xs text-purple-600">
-                  <Crown className="h-3 w-3" />
-                  <span>Pro</span>
+          {isAuthenticated ? (
+            <>
+              {/* User Info Section */}
+              <div className="p-4 border-b border-gray-200 dark:border-gray-700">
+                <div className="flex items-center gap-3">
+                  <div className="w-10 h-10 bg-blue-500 rounded-full flex items-center justify-center text-white font-semibold">
+                    {billing?.name?.charAt(0) || 'U'}
+                  </div>
+                  <div className="flex-1 min-w-0">
+                    <p className="font-semibold text-gray-900 dark:text-white truncate">
+                      {billing?.name || 'User'}
+                    </p>
+                    <p className="text-sm text-gray-500 dark:text-gray-400 truncate">
+                      {billing?.email || 'user@example.com'}
+                    </p>
+                  </div>
                 </div>
-              )}
-            </div>
-          </div>
+                
+                {/* Credit Display */}
+                <div className="mt-3 flex items-center justify-between">
+                  <div className="flex items-center gap-2">
+                    <Coins className="h-4 w-4 text-yellow-500" />
+                    <span className="text-sm font-medium">
+                      {billing?.credits || 0} credits
+                    </span>
+                  </div>
+                  {isPro && (
+                    <div className="flex items-center gap-1 text-xs text-purple-600">
+                      <Crown className="h-3 w-3" />
+                      <span>Pro</span>
+                    </div>
+                  )}
+                </div>
+              </div>
 
-          {/* Menu Items */}
-          <div className="py-2">
-            {/* Upgrade Option */}
-            {!isPro && (
-              <button
-                onClick={() => {
-                  setShowDropdown(false);
-                  setShowCreditCheck(true);
-                }}
-                className="w-full flex items-center gap-3 px-4 py-2 text-left hover:bg-gray-50 dark:hover:bg-gray-800 transition-colors"
-              >
-                <Crown className="h-4 w-4 text-purple-600" />
-                <span className="font-medium">Upgrade to Pro</span>
-              </button>
-            )}
+              {/* Menu Items for Authenticated Users */}
+              <div className="py-2">
+                {/* Upgrade Option */}
+                {!isPro && (
+                  <button
+                    onClick={() => {
+                      setShowDropdown(false);
+                      setShowCreditCheck(true);
+                    }}
+                    className="w-full flex items-center gap-3 px-4 py-2 text-left hover:bg-gray-50 dark:hover:bg-gray-800 transition-colors"
+                  >
+                    <Crown className="h-4 w-4 text-purple-600" />
+                    <span className="font-medium">Upgrade to Pro</span>
+                  </button>
+                )}
 
-            {/* Credit History */}
-            <button
-              onClick={() => {
-                setShowDropdown(false);
-                setShowCreditHistory(true);
-              }}
-              className="w-full flex items-center gap-3 px-4 py-2 text-left hover:bg-gray-50 dark:hover:bg-gray-800 transition-colors"
-            >
-              <Coins className="h-4 w-4 text-blue-600" />
-              <span>Credit History</span>
-            </button>
+                {/* Credit History */}
+                <button
+                  onClick={() => {
+                    setShowDropdown(false);
+                    setShowCreditHistory(true);
+                  }}
+                  className="w-full flex items-center gap-3 px-4 py-2 text-left hover:bg-gray-50 dark:hover:bg-gray-800 transition-colors"
+                >
+                  <Coins className="h-4 w-4 text-blue-600" />
+                  <span>Credit History</span>
+                </button>
 
-            {/* Settings */}
-            <button
-              onClick={() => setShowDropdown(false)}
-              className="w-full flex items-center gap-3 px-4 py-2 text-left hover:bg-gray-50 dark:hover:bg-gray-800 transition-colors"
-            >
-              <Settings className="h-4 w-4 text-gray-600" />
-              <span>Settings</span>
-            </button>
+                {/* Settings */}
+                <button
+                  onClick={() => setShowDropdown(false)}
+                  className="w-full flex items-center gap-3 px-4 py-2 text-left hover:bg-gray-50 dark:hover:bg-gray-800 transition-colors"
+                >
+                  <Settings className="h-4 w-4 text-gray-600" />
+                  <span>Settings</span>
+                </button>
 
-            {/* Logout */}
-            <button
-              onClick={() => setShowDropdown(false)}
-              className="w-full flex items-center gap-3 px-4 py-2 text-left hover:bg-gray-50 dark:hover:bg-gray-800 transition-colors text-red-600"
-            >
-              <LogOut className="h-4 w-4" />
-              <span>Logout</span>
-            </button>
-          </div>
+                {/* Logout */}
+                <button
+                  onClick={() => setShowDropdown(false)}
+                  className="w-full flex items-center gap-3 px-4 py-2 text-left hover:bg-gray-50 dark:hover:bg-gray-800 transition-colors text-red-600"
+                >
+                  <LogOut className="h-4 w-4" />
+                  <span>Logout</span>
+                </button>
+              </div>
+            </>
+          ) : (
+            <>
+              {/* Menu Items for Unauthenticated Users */}
+              <div className="p-4">
+                <div className="text-center mb-4">
+                  <h3 className="text-lg font-semibold text-gray-900 dark:text-white">
+                    Welcome to VIBE
+                  </h3>
+                  <p className="text-sm text-gray-500 dark:text-gray-400">
+                    Sign in to access your account
+                  </p>
+                </div>
+                
+                <div className="space-y-2">
+                  {/* Sign In Button */}
+                  <button
+                    onClick={() => {
+                      setShowDropdown(false);
+                      // This will trigger the Stack Auth sign in
+                    }}
+                    className="w-full flex items-center justify-center gap-2 px-4 py-2 bg-purple-600 hover:bg-purple-700 text-white rounded-lg transition-colors"
+                  >
+                    <span>Sign In</span>
+                  </button>
+                  
+                  {/* Get Started Button */}
+                  <button
+                    onClick={() => {
+                      setShowDropdown(false);
+                      // This will trigger the Stack Auth sign up
+                    }}
+                    className="w-full flex items-center justify-center gap-2 px-4 py-2 border border-purple-600 text-purple-600 hover:bg-purple-50 rounded-lg transition-colors"
+                  >
+                    <span>Get Started</span>
+                  </button>
+                </div>
+              </div>
+            </>
+          )}
         </div>
       )}
 
