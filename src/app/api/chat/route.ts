@@ -107,7 +107,7 @@ export async function POST(req: NextRequest) {
     resourceId: appId,
     maxSteps: 100,
     maxRetries: 0,
-    maxOutputTokens: Number(process.env.MAX_OUTPUT_TOKENS ?? "24000"),
+    maxOutputTokens: 8000,
     toolsets,
     async onChunk() {
       if (Date.now() - lastKeepAlive > 5000) {
@@ -117,7 +117,16 @@ export async function POST(req: NextRequest) {
     },
     async onStepFinish(step) {
       messageList.add(step.response.messages, "response");
-      // Removed the problematic abort logic that was causing mid-stream stops
+
+      if (shouldAbort) {
+        await redisPublisher.del(`app:${appId}:stream-state`);
+        controller.abort("Aborted stream after step finish");
+        const messages = messageList.drainUnsavedMessages();
+        console.log(messages);
+        await agent.getMemory()?.saveMessages({
+          messages,
+        });
+      }
     },
     onError: async (error) => {
       await mcp.disconnect();
