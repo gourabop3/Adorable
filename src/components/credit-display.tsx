@@ -15,8 +15,7 @@ export function CreditDisplay({ credits, plan, onUpgradeClick, onShowHistory }: 
   const isPro = plan === 'pro';
 
   return (
-    <div className="flex flex-col sm:flex-row items-start sm:items-center gap-2 sm:gap-3">
-      {/* Credit Display - Mobile Stacked, Desktop Inline */}
+    <div className="flex items-center gap-2">
       <div className="flex items-center gap-1 text-sm">
         <Coins className="h-4 w-4 text-yellow-500" />
         <span className={isLowCredits ? "text-red-600 font-medium" : ""}>
@@ -24,7 +23,6 @@ export function CreditDisplay({ credits, plan, onUpgradeClick, onShowHistory }: 
         </span>
       </div>
       
-      {/* Plan Badge */}
       {isPro && (
         <div className="flex items-center gap-1 text-sm text-purple-600">
           <Crown className="h-3 w-3" />
@@ -32,31 +30,26 @@ export function CreditDisplay({ credits, plan, onUpgradeClick, onShowHistory }: 
         </div>
       )}
       
-      {/* Action Buttons - Mobile Stacked, Desktop Inline */}
-      <div className="flex flex-col sm:flex-row gap-2 sm:gap-2 w-full sm:w-auto">
+      <Button
+        variant="outline"
+        size="sm"
+        onClick={onShowHistory}
+        className="h-7 px-2 text-xs"
+      >
+        <History className="h-3 w-3 mr-1" />
+        History
+      </Button>
+      
+      {!isPro && (
         <Button
           variant="outline"
           size="sm"
-          onClick={onShowHistory}
-          className="h-8 px-3 text-xs w-full sm:w-auto"
+          onClick={onUpgradeClick}
+          className="h-7 px-2 text-xs"
         >
-          <History className="h-3 w-3 mr-1" />
-          <span className="hidden sm:inline">History</span>
-          <span className="sm:hidden">View History</span>
+          Upgrade
         </Button>
-        
-        {!isPro && (
-          <Button
-            variant="outline"
-            size="sm"
-            onClick={onUpgradeClick}
-            className="h-8 px-3 text-xs w-full sm:w-auto"
-          >
-            <span className="hidden sm:inline">Upgrade</span>
-            <span className="sm:hidden">Upgrade Plan</span>
-          </Button>
-        )}
-      </div>
+      )}
     </div>
   );
 }
