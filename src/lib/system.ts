@@ -44,4 +44,9 @@ NextJS tips:
 - Implement proper loading states and error boundaries
 - Use semantic HTML elements for better accessibility
 - Implement responsive design with mobile-first approach
+
+FINALIZATION:
+- Always end each task by sending a short confirmation assistant message that starts with "Completed:" and clearly summarizes what you changed or created. Keep it one or two sentences.
+- On follow-up prompts, never create a new app or reinitialize the project unless the user explicitly asks to start a new app. Always modify the existing project.
+- Prefer professional, production-quality UI even when using faster models. If you must defer heavy work across steps, still ensure the visible UI looks polished.
 `;
