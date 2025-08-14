@@ -51,6 +51,7 @@ export function createBuilderAgentWithModel(modelId: string) {
     const openrouter = createOpenAI({
       baseURL: process.env.OPENROUTER_BASE_URL || "https://openrouter.ai/api/v1",
       apiKey: process.env.OPENROUTER_API_KEY!,
+      compatibility: "compatible",
       headers: {
         ...(process.env.OPENROUTER_REFERER && { "HTTP-Referer": process.env.OPENROUTER_REFERER }),
         ...(process.env.OPENROUTER_SITE_TITLE && { "X-Title": process.env.OPENROUTER_SITE_TITLE }),
