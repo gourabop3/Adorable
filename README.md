@@ -37,3 +37,16 @@ A modern AI-powered app builder with real-time streaming and beautiful UI genera
 ---
 
 *Last updated: Auto-deploy trigger* 🚀
+
+## OpenRouter (DeepSeek) support
+
+To enable the DeepSeek model via OpenRouter in the Model Selector:
+
+Set the following environment variables in your deployment:
+
+- `OPENROUTER_API_KEY`: Your OpenRouter API key
+- `OPENROUTER_BASE_URL` (optional): Defaults to `https://openrouter.ai/api/v1`
+- `OPENROUTER_REFERER` (optional): Your site URL for rankings on openrouter.ai
+- `OPENROUTER_SITE_TITLE` (optional): Your site title for rankings on openrouter.ai
+
+Then select "DeepSeek R1 (free)" in the model selector. The agent will route requests via OpenRouter.

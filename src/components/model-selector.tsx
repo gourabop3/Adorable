@@ -10,12 +10,13 @@ import {
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
 
-export type SupportedModelId = "gemini-2.5-pro" | "gpt-4o" | "claude-3.5-sonnet";
+export type SupportedModelId = "gemini-2.5-pro" | "gpt-4o" | "claude-3.5-sonnet" | "deepseek/deepseek-r1-0528:free";
 
 export const MODELS: Record<SupportedModelId, { name: string; provider: string }> = {
   "gemini-2.5-pro": { name: "Gemini 2.5 Pro", provider: "google" },
   "gpt-4o": { name: "GPT-4o", provider: "openai" },
   "claude-3.5-sonnet": { name: "Claude 3.5 Sonnet", provider: "anthropic" },
+  "deepseek/deepseek-r1-0528:free": { name: "DeepSeek R1 (free)", provider: "openrouter" },
 };
 
 export function ModelSelector({
