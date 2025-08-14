@@ -12,7 +12,7 @@ export const memory = new Memory({
     lastMessages: 1000,
     semanticRecall: false,
     threads: {
-      generateTitle: true,
+      generateTitle: false,
     },
   },
   vector: new PgVector({
