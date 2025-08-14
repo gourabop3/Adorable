@@ -36,24 +36,33 @@ export const builderAgent = new Agent({
 
 export function createBuilderAgentWithModel(modelId: string) {
   let model;
-  
+
   if (modelId.startsWith("gpt")) {
     model = openai(modelId);
+
   } else if (modelId.startsWith("claude")) {
     model = anthropic(modelId);
+
   } else if (modelId.startsWith("chatanywhere/")) {
-    const compatApiKey = process.env.OPENAI_COMPAT_API_KEY || process.env.CHATANYWHERE_API_KEY;
+    const compatApiKey =
+      process.env.OPENAI_COMPAT_API_KEY || process.env.CHATANYWHERE_API_KEY;
+
     if (!compatApiKey) {
       throw new Error(
         "ChatAnywhere is not configured. Set OPENAI_COMPAT_API_KEY or CHATANYWHERE_API_KEY (and optionally OPENAI_COMPAT_BASE_URL)."
       );
     }
-    // Route to an OpenAI-compatible provider (ChatAnywhere) with custom base URL
+
+    // Force old OpenAI chat completion style
     const chatanywhere = createOpenAI({
-      baseURL: process.env.OPENAI_COMPAT_BASE_URL || "https://api.chatanywhere.tech/v1",
+      baseURL:
+        process.env.OPENAI_COMPAT_BASE_URL ||
+        "https://api.chatanywhere.org/v1", // .org works globally
       apiKey: compatApiKey,
+      compatibility: "strict", // important: use /chat/completions, not /responses
     });
-    // Strip the prefix to pass the provider's native model id (e.g., gpt-4o)
+
+    // Remove prefix and pass native model name
     model = chatanywhere(modelId.replace(/^chatanywhere\//, ""));
 
   } else {
