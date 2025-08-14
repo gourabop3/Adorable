@@ -42,12 +42,16 @@ export function createBuilderAgentWithModel(modelId: string) {
   } else if (modelId.startsWith("claude")) {
     model = anthropic(modelId);
   } else if (modelId.startsWith("deepseek/")) {
+    if (!process.env.OPENROUTER_API_KEY) {
+      throw new Error(
+        "OpenRouter is not configured. Set OPENROUTER_API_KEY (and optionally OPENROUTER_BASE_URL, OPENROUTER_REFERER, OPENROUTER_SITE_TITLE)."
+      );
+    }
     // Route OpenRouter models through OpenAI-compatible client with custom base URL
     model = openai(modelId, {
       baseURL: process.env.OPENROUTER_BASE_URL || "https://openrouter.ai/api/v1",
       apiKey: process.env.OPENROUTER_API_KEY,
       headers: {
-        // Optional headers for ranking/attribution on openrouter.ai
         ...(process.env.OPENROUTER_REFERER && { "HTTP-Referer": process.env.OPENROUTER_REFERER }),
         ...(process.env.OPENROUTER_SITE_TITLE && { "X-Title": process.env.OPENROUTER_SITE_TITLE }),
       },

@@ -2,7 +2,7 @@ import { getApp } from "@/actions/get-app";
 import { freestyle } from "@/lib/freestyle";
 import { getAppIdFromHeaders } from "@/lib/utils";
 import { MCPClient } from "@mastra/mcp";
-import { builderAgent } from "@/mastra/agents/builder";
+import { builderAgent, createBuilderAgentWithModel } from "@/mastra/agents/builder";
 import { UIMessage } from "ai";
 
 // "fix" mastra mcp bug
@@ -79,10 +79,14 @@ export async function POST(req: NextRequest) {
 		repoId: app.info.gitRepo,
 	});
 
+	// Selected model via header (defaults to gemini-2.5-pro)
+	const selectedModel = req.headers.get("x-selected-model") || "gemini-2.5-pro";
+
 	const resumableStream = await sendMessage(
 		appId,
 		mcpEphemeralUrl,
-		messages.at(-1)!
+		messages.at(-1)!,
+		selectedModel
 	);
 
 	return resumableStream.response();
@@ -91,7 +95,8 @@ export async function POST(req: NextRequest) {
 export async function sendMessage(
 	appId: string,
 	mcpUrl: string,
-	message: UIMessage
+	message: UIMessage,
+	modelId?: string
 ) {
 	const mcp = new MCPClient({
 		id: crypto.randomUUID(),
@@ -104,8 +109,11 @@ export async function sendMessage(
 
 	const toolsets = await mcp.getToolsets();
 
+	// Pick agent for selected model
+	const agent = modelId ? createBuilderAgentWithModel(modelId) : builderAgent;
+
 	await (
-		await builderAgent.getMemory()
+		await agent.getMemory()
 	)?.saveMessages({
 		messages: [
 			{
@@ -136,7 +144,7 @@ export async function sendMessage(
 		threadId: appId,
 	});
 
-	const stream = await builderAgent.stream([], {
+	const stream = await agent.stream([], {
 		threadId: appId,
 		resourceId: appId,
 		maxSteps: 100,
@@ -159,7 +167,7 @@ export async function sendMessage(
 				controller.abort("Aborted stream after step finish");
 				const messages = messageList.drainUnsavedMessages();
 				console.log(messages);
-				await builderAgent.getMemory()?.saveMessages({
+				await agent.getMemory()?.saveMessages({
 					messages,
 				});
 			}
