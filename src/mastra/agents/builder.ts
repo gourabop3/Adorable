@@ -1,6 +1,6 @@
 import { SYSTEM_MESSAGE } from "@/lib/system";
 import { google } from "@ai-sdk/google";
-import { openai } from "@ai-sdk/openai";
+import { openai, createOpenAI } from "@ai-sdk/openai";
 import { anthropic } from "@ai-sdk/anthropic";
 import { Agent } from "@mastra/core/agent";
 import { Memory } from "@mastra/memory";
@@ -48,14 +48,16 @@ export function createBuilderAgentWithModel(modelId: string) {
       );
     }
     // Route OpenRouter models through OpenAI-compatible client with custom base URL
-    model = openai(modelId, {
+    const openrouter = createOpenAI({
       baseURL: process.env.OPENROUTER_BASE_URL || "https://openrouter.ai/api/v1",
-      apiKey: process.env.OPENROUTER_API_KEY,
+      apiKey: process.env.OPENROUTER_API_KEY!,
       headers: {
         ...(process.env.OPENROUTER_REFERER && { "HTTP-Referer": process.env.OPENROUTER_REFERER }),
         ...(process.env.OPENROUTER_SITE_TITLE && { "X-Title": process.env.OPENROUTER_SITE_TITLE }),
       },
     });
+    model = openrouter(modelId);
+
   } else {
     // Default to Google models
     model = google(modelId);
