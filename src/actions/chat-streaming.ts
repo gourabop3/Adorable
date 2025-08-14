@@ -1,8 +1,13 @@
 "use server";
 
-import { getStreamState } from "@/lib/internal/stream-manager";
+import { redisPublisher } from "@/lib/redis";
 
 export async function chatState(appId: string) {
-  const streamState = await getStreamState(appId);
-  return streamState;
+	const streamState = await redisPublisher.get(
+		"app:" + appId + ":stream-state"
+	);
+
+	return {
+		state: streamState,
+	};
 }
