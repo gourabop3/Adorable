@@ -41,23 +41,20 @@ export function createBuilderAgentWithModel(modelId: string) {
     model = openai(modelId);
   } else if (modelId.startsWith("claude")) {
     model = anthropic(modelId);
-  } else if (modelId.startsWith("deepseek/")) {
-    if (!process.env.OPENROUTER_API_KEY) {
+  } else if (modelId.startsWith("chatanywhere/")) {
+    const compatApiKey = process.env.OPENAI_COMPAT_API_KEY || process.env.CHATANYWHERE_API_KEY;
+    if (!compatApiKey) {
       throw new Error(
-        "OpenRouter is not configured. Set OPENROUTER_API_KEY (and optionally OPENROUTER_BASE_URL, OPENROUTER_REFERER, OPENROUTER_SITE_TITLE)."
+        "ChatAnywhere is not configured. Set OPENAI_COMPAT_API_KEY or CHATANYWHERE_API_KEY (and optionally OPENAI_COMPAT_BASE_URL)."
       );
     }
-    // Route OpenRouter models through OpenAI-compatible client with custom base URL
-    const openrouter = createOpenAI({
-      baseURL: process.env.OPENROUTER_BASE_URL || "https://openrouter.ai/api/v1",
-      apiKey: process.env.OPENROUTER_API_KEY!,
-      compatibility: "compatible",
-      headers: {
-        ...(process.env.OPENROUTER_REFERER && { "HTTP-Referer": process.env.OPENROUTER_REFERER }),
-        ...(process.env.OPENROUTER_SITE_TITLE && { "X-Title": process.env.OPENROUTER_SITE_TITLE }),
-      },
+    // Route to an OpenAI-compatible provider (ChatAnywhere) with custom base URL
+    const chatanywhere = createOpenAI({
+      baseURL: process.env.OPENAI_COMPAT_BASE_URL || "https://api.chatanywhere.tech/v1",
+      apiKey: compatApiKey,
     });
-    model = openrouter(modelId);
+    // Strip the prefix to pass the provider's native model id (e.g., gpt-4o)
+    model = chatanywhere(modelId.replace(/^chatanywhere\//, ""));
 
   } else {
     // Default to Google models
