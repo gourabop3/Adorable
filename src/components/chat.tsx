@@ -36,14 +36,14 @@ export default function Chat(props: {
 		gcTime: 5000,
 	});
 
-	// Debounce the running state
+	// Debounce the running state based on live server state only
 	const [debouncedRunning, setDebouncedRunning] = useState(false);
 	useEffect(() => {
 		const timer = setTimeout(() => {
-			setDebouncedRunning(props.running && chat?.state === "running");
+			setDebouncedRunning(chat?.state === "running");
 		}, 300);
 		return () => clearTimeout(timer);
-	}, [props.running, chat?.state]);
+	}, [chat?.state]);
 
 	const { messages, sendMessage } = useChatSafe({
 		messages: props.initialMessages,

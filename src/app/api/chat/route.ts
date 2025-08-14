@@ -178,6 +178,11 @@ export async function sendMessage(
 			console.error("Stream error:", error);
 		},
 		onFinish: async () => {
+			// Persist any unsaved streamed messages so history is visible after refresh
+			const messages = messageList.drainUnsavedMessages();
+			if (messages && (messages as unknown[]).length) {
+				await agent.getMemory()?.saveMessages({ messages: messages as any });
+			}
 			await redisPublisher.del(`app:${appId}:stream-state`);
 			await mcp.disconnect();
 		},
