@@ -64,7 +64,6 @@ export default function Chat(props: {
 		}
 		
 		const messageText = input.trim();
-		setInput("");
 		
 		setTimeout(() => {
 			const messageId = crypto.randomUUID();
@@ -117,7 +116,7 @@ export default function Chat(props: {
 				},
 			}
 		);
-		setInput("");
+
 	};
 
 	return (
