@@ -68,25 +68,7 @@ export async function POST(req: NextRequest) {
   if (streamState === "running") {
     console.log("Stopping previous stream for appId:", appId);
     stopStream(appId);
-
-    const maxAttempts = 60;
-    let attempts = 0;
-    while (attempts < maxAttempts) {
-      await new Promise((resolve) => setTimeout(resolve, 500));
-      const updatedState = await redisPublisher.get("app:" + appId + ":stream-state");
-      if (updatedState !== "running") {
-        break;
-      }
-      attempts++;
-    }
-
-    if (attempts >= maxAttempts) {
-      await redisPublisher.del(`app:${appId}:stream-state`);
-      return new Response(
-        "Previous stream is still shutting down, please try again",
-        { status: 429 }
-      );
-    }
+    // Proceed without waiting; cleanup happens in onFinish/onError
   }
 
   const { messages }: { messages: UIMessage[] } = await req.json();
@@ -150,7 +132,7 @@ export async function sendMessage(
   const timeoutId = setTimeout(() => {
     console.log(`⏰ Timeout reached for app ${appId}, aborting stream`);
     abortController.abort();
-  }, 30000); // 30 second timeout
+  }, 60000); // 60 second timeout
   
   try {
     const response = await AIService.sendMessage(
