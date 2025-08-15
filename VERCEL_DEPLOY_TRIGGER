@@ -1,1 +1,6 @@
-Trigger Vercel deploy - tiny change at 2025-08-15T13:45:00Z
+# Vercel Auto-Deploy Trigger
+# Last updated: 2025-01-27 18:30:00 UTC
+# This file triggers Vercel to auto-deploy when changed
+
+TRIGGER_DEPLOYMENT=true
+TIMESTAMP=1706373000
