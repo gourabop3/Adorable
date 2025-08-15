@@ -182,6 +182,16 @@ function HomeContent() {
               No coding required. Just describe what you want and watch it come to life.
             </p>
 
+            <div className="flex gap-4 justify-center mb-6">
+              <Button
+                onClick={() => router.push('/sandbox')}
+                variant="outline"
+                className="flex items-center gap-2 bg-gradient-to-r from-blue-500 to-purple-600 text-white border-none hover:from-blue-600 hover:to-purple-700"
+              >
+                🚀 Try Sandbox Mode
+              </Button>
+            </div>
+
             {/* Credit Balance Banner */}
             <CreditBalanceBanner />
 
