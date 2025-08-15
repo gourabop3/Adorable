@@ -28,44 +28,20 @@ export default function WebView(props: {
 		: undefined;
 	const [reloadKey, setReloadKey] = useState(0);
 	const [iframeLoading, setIframeLoading] = useState(true);
-	const [devServerReady, setDevServerReady] = useState(false);
+	const [showPreview, setShowPreview] = useState(false);
 
-	// Check if dev server is ready
+	// Simple 20-second timer to show "Coming Soon" before preview
 	useEffect(() => {
 		if (hasDomain) {
-			setDevServerReady(true);
+			// For deployed apps, show immediately
+			setShowPreview(true);
 		} else {
-			// For local dev server, check if it's running
-			const checkDevServer = async () => {
-				try {
-					// Check if there's actual content in the repo
-					// This could be enhanced to check specific files or endpoints
-					const checkInterval = setInterval(async () => {
-						try {
-							// You can add more sophisticated checks here
-							// For example, check if index.html exists and has content
-							// For now, we'll use a timeout as a fallback
-							setTimeout(() => {
-								setDevServerReady(true);
-								clearInterval(checkInterval);
-							}, 3000);
-						} catch (error) {
-							console.log("Dev server not ready yet");
-						}
-					}, 1000);
+			// For local dev server, wait 20 seconds then show preview
+			const timer = setTimeout(() => {
+				setShowPreview(true);
+			}, 20000); // 20 seconds
 
-					// Fallback: if nothing happens in 10 seconds, show anyway
-					setTimeout(() => {
-						setDevServerReady(true);
-						clearInterval(checkInterval);
-					}, 10000);
-				} catch (error) {
-					console.log("Dev server check failed");
-					// Fallback: show after delay
-					setTimeout(() => setDevServerReady(true), 5000);
-				}
-			};
-			checkDevServer();
+			return () => clearTimeout(timer);
 		}
 	}, [hasDomain]);
 
@@ -78,8 +54,8 @@ export default function WebView(props: {
 		}
 	};
 
-	// Show "Coming Soon" until dev server is ready
-	if (!devServerReady) {
+	// Show "Coming Soon" for 20 seconds
+	if (!showPreview) {
 		return (
 			<div className="flex flex-col overflow-hidden h-screen border-l transition-opacity duration-700 mt-[2px]">
 				<div className="h-12 border-b border-gray-200 items-center flex px-2 bg-background sticky top-0 justify-end gap-2">
@@ -99,11 +75,11 @@ export default function WebView(props: {
 							App Coming Soon
 						</h2>
 						<p className="text-gray-500 dark:text-gray-400 max-w-md">
-							Your AI assistant is building your app. This preview will appear once the development server is ready.
+							Your AI assistant is building your app. This preview will appear in a few seconds.
 						</p>
 						<div className="loader mx-auto"></div>
 						<p className="text-sm text-gray-400">
-							Tip: Ask the AI to create or modify your app to see the preview
+							💡 Ask the AI to create or modify your app to see the preview
 						</p>
 					</div>
 				</div>
@@ -111,6 +87,7 @@ export default function WebView(props: {
 		);
 	}
 
+	// Show preview after 20 seconds
 	return (
 		<div className="flex flex-col overflow-hidden h-screen border-l transition-opacity duration-700 mt-[2px]">
 			<div className="h-12 border-b border-gray-200 items-center flex px-2 bg-background sticky top-0 justify-end gap-2">
