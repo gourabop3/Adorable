@@ -29,7 +29,7 @@ function getSafeMaxTokensForModel(modelId?: string): number {
   }
   const id = modelId.toLowerCase();
   if (id.includes("gemini-2.0") && id.includes("flash")) {
-    return 2048; // very conservative for 2.0 flash exp
+    return 8192; // very conservative for 2.0 flash exp
   }
   if (id.includes("gemini-2.5")) {
     return 8192; // safer cap for 2.5
