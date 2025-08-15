@@ -271,7 +271,14 @@ export async function sendMessageWithStreaming(
         await handleStreamLifecycle(appId, "error");
       },
       onFinish: async () => {
-        await handleStreamLifecycle(appId, "finish");
+        try {
+          const messages = await AIService.getUnsavedMessages(appId);
+          if (messages && (messages as unknown[]).length) {
+            await AIService.saveMessagesToMemory(agent, appId, messages);
+          }
+        } finally {
+          await handleStreamLifecycle(appId, "finish");
+        }
       },
       abortSignal: controller.signal,
     }
