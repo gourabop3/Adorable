@@ -22,6 +22,7 @@ export default function Chat(props: {
 	topBar?: React.ReactNode;
 	running: boolean;
 	selectedModel?: string;
+	useEnhancedStreaming?: boolean; // New prop for enhanced streaming
 }) {
 	const { data: chat } = useQuery({
 		queryKey: ["stream", props.appId],
