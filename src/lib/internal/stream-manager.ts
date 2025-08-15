@@ -276,7 +276,7 @@ export async function sendMessageWithStreaming(
         } finally {
           await handleStreamLifecycle(appId, "error");
         }
-      }
+      },
       onFinish: async () => {
         try {
           const messages = await AIService.getUnsavedMessages(appId);
