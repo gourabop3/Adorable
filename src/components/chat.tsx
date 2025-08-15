@@ -28,27 +28,14 @@ export default function Chat(props: {
 		queryFn: async () => {
 			return chatState(props.appId);
 		},
-		refetchInterval: 2000,
-		refetchOnWindowFocus: false,
-		staleTime: 1000,
-		refetchOnMount: false,
-		refetchOnReconnect: false,
-		gcTime: 5000,
+		refetchInterval: 1000,
+		refetchOnWindowFocus: true,
 	});
-
-	// Debounce the running state based on live server state only
-	const [debouncedRunning, setDebouncedRunning] = useState(false);
-	useEffect(() => {
-		const timer = setTimeout(() => {
-			setDebouncedRunning(chat?.state === "running");
-		}, 300);
-		return () => clearTimeout(timer);
-	}, [chat?.state]);
 
 	const { messages, sendMessage } = useChatSafe({
 		messages: props.initialMessages,
 		id: props.appId,
-		resume: debouncedRunning,
+		resume: props.running && chat?.state === "running",
 	});
 
 	const [input, setInput] = useState("");
@@ -57,34 +44,23 @@ export default function Chat(props: {
 		if (e?.preventDefault) {
 			e.preventDefault();
 		}
-		
-		// Prevent duplicate message sending
-		if (!input.trim() || debouncedRunning) {
-			return;
-		}
-		
-		const messageText = input.trim();
-		
-		setTimeout(() => {
-			const messageId = crypto.randomUUID();
-			sendMessage(
-				{
-					id: messageId,
-					parts: [
-						{
-							type: "text",
-							text: messageText,
-						},
-					],
-				},
-				{
-					headers: {
-						"Adorable-App-Id": props.appId,
-						...(props.selectedModel && { "x-selected-model": props.selectedModel }),
+		sendMessage(
+			{
+				parts: [
+					{
+						type: "text",
+						text: input,
 					},
-				}
-			);
-		}, 100);
+				],
+			},
+			{
+				headers: {
+					"Adorable-App-Id": props.appId,
+					...(props.selectedModel && { "x-selected-model": props.selectedModel }),
+				},
+			}
+		);
+		setInput("");
 	};
 
 	const onSubmitWithImages = (text: string, images: CompressedImage[]) => {
@@ -116,6 +92,7 @@ export default function Chat(props: {
 				},
 			}
 		);
+		setInput("");
 
 	};
 
@@ -151,7 +128,7 @@ export default function Chat(props: {
 					}}
 					onSubmit={onSubmit}
 					onSubmitWithImages={onSubmitWithImages}
-					isGenerating={props.isLoading || debouncedRunning}
+					isGenerating={props.isLoading || chat?.state === "running"}
 				/>
 			</div>
 		</div>
