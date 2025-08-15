@@ -236,6 +236,9 @@ export async function sendMessageWithStreaming(
   });
 
   let lastKeepAlive = Date.now();
+  const keepAliveInterval = setInterval(() => {
+    updateKeepAlive(appId).catch(() => {});
+  }, 10000);
 
   // Use the AI service to handle the AI interaction
   const aiResponse = await AIService.sendMessage(
@@ -274,6 +277,7 @@ export async function sendMessageWithStreaming(
             await AIService.saveMessagesToMemory(agent, appId, messages);
           }
         } finally {
+          clearInterval(keepAliveInterval);
           await handleStreamLifecycle(appId, "error");
         }
       },
@@ -284,6 +288,7 @@ export async function sendMessageWithStreaming(
             await AIService.saveMessagesToMemory(agent, appId, messages);
           }
         } finally {
+          clearInterval(keepAliveInterval);
           await handleStreamLifecycle(appId, "finish");
         }
       },
