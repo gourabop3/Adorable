@@ -24,31 +24,3 @@
       250% 0;
   }
 }
-
-/* Hide placeholder freestyle logo in preview/iframe */
-iframe img[src*="placeholder-freestyle-logo.svg"],
-iframe [src*="placeholder-freestyle-logo.svg"],
-iframe img[alt*="placeholder"],
-iframe [alt*="placeholder"],
-iframe img[src*="freestyle-logo"],
-iframe [src*="freestyle-logo"] {
-  display: none !important;
-  visibility: hidden !important;
-  opacity: 0 !important;
-  width: 0 !important;
-  height: 0 !important;
-  position: absolute !important;
-  left: -9999px !important;
-}
-
-/* Also hide any elements with placeholder freestyle logo in the main app */
-img[src*="placeholder-freestyle-logo.svg"],
-[src*="placeholder-freestyle-logo.svg"],
-img[alt*="placeholder"],
-[alt*="placeholder"],
-img[src*="freestyle-logo"],
-[src*="freestyle-logo"] {
-  display: none !important;
-  visibility: hidden !important;
-  opacity: 0 !important;
-}
