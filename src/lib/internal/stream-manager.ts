@@ -23,6 +23,26 @@ export interface StreamInfo {
   response(): Promise<Response>;
 }
 
+function getSafeMaxTokensForModel(modelId?: string): number {
+  if (!modelId) {
+    return Number(process.env.MAX_OUTPUT_TOKENS ?? "20000");
+  }
+  const id = modelId.toLowerCase();
+  if (id.includes("gemini-2.0") && id.includes("flash")) {
+    return 2048; // very conservative for 2.0 flash exp
+  }
+  if (id.includes("gemini-2.5")) {
+    return 8192; // safer cap for 2.5
+  }
+  if (id.startsWith("gpt-4o")) {
+    return 8192;
+  }
+  if (id.startsWith("claude")) {
+    return 8192;
+  }
+  return Number(process.env.MAX_OUTPUT_TOKENS ?? "20000");
+}
+
 /**
  * Get the current stream state for an app
  */
@@ -225,7 +245,8 @@ export async function sendMessageWithStreaming(
   appId: string,
   mcpUrl: string,
   fs: FreestyleDevServerFilesystem,
-  message: UIMessage
+  message: UIMessage,
+  opts?: { modelId?: string }
 ) {
   const controller = new AbortController();
   let shouldAbort = false;
@@ -240,6 +261,8 @@ export async function sendMessageWithStreaming(
     updateKeepAlive(appId).catch(() => {});
   }, 10000);
 
+  const maxOutputTokens = getSafeMaxTokensForModel(opts?.modelId);
+
   // Use the AI service to handle the AI interaction
   const aiResponse = await AIService.sendMessage(
     agent,
@@ -252,7 +275,7 @@ export async function sendMessageWithStreaming(
       resourceId: appId,
       maxSteps: 80,
       maxRetries: 1,
-             maxOutputTokens: Number(process.env.MAX_OUTPUT_TOKENS ?? "20000"),
+      maxOutputTokens,
       async onChunk() {
         if (Date.now() - lastKeepAlive > 3000) {
           lastKeepAlive = Date.now();

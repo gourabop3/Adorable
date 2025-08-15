@@ -33,11 +33,10 @@ export function useChatSafe(
     }
 
     return () => {
-      if (runningChats.has(id)) {
-        chat.stop().then(() => {
-          runningChats.delete(id);
-        });
-      }
+      // Always stop stream on unmount to avoid ghost streams
+      chat.stop().finally(() => {
+        runningChats.delete(id);
+      });
     };
   }, [resume, id]);
 

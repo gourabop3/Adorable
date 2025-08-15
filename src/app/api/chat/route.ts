@@ -60,7 +60,8 @@ export async function POST(req: NextRequest) {
 		appId,
 		mcpEphemeralUrl,
 		fs,
-		messages.at(-1)!
+		messages.at(-1)!,
+		{ modelId: selectedModel || undefined }
 	);
 
 	return resumableStream.response();
