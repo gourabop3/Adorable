@@ -132,7 +132,7 @@ export async function setStream(
   }
 
   await redisPublisher.set(`app:${appId}:stream-state`, "running", {
-    EX: 30,
+    EX: 60,
   });
 
   const resumableStream = await streamContext.createNewResumableStream(
@@ -194,7 +194,7 @@ export async function setupAbortCallback(
  */
 export async function updateKeepAlive(appId: string): Promise<void> {
   await redisPublisher.set(`app:${appId}:stream-state`, "running", {
-    EX: 30,
+    EX: 60,
   });
 }
 
@@ -247,9 +247,9 @@ export async function sendMessageWithStreaming(
     {
       threadId: appId,
       resourceId: appId,
-      maxSteps: 100,
-      maxRetries: 0,
-             maxOutputTokens: Number(process.env.MAX_OUTPUT_TOKENS ?? "24000"),
+      maxSteps: 80,
+      maxRetries: 1,
+             maxOutputTokens: Number(process.env.MAX_OUTPUT_TOKENS ?? "20000"),
       async onChunk() {
         if (Date.now() - lastKeepAlive > 3000) {
           lastKeepAlive = Date.now();
@@ -268,8 +268,15 @@ export async function sendMessageWithStreaming(
       },
       onError: async (error: { error: unknown }) => {
         console.error("Stream error in manager:", error);
-        await handleStreamLifecycle(appId, "error");
-      },
+        try {
+          const messages = await AIService.getUnsavedMessages(appId);
+          if (messages && (messages as unknown[]).length) {
+            await AIService.saveMessagesToMemory(agent, appId, messages);
+          }
+        } finally {
+          await handleStreamLifecycle(appId, "error");
+        }
+      }
       onFinish: async () => {
         try {
           const messages = await AIService.getUnsavedMessages(appId);
