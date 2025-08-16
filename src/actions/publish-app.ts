@@ -4,6 +4,7 @@ import { getUser } from "@/auth/stack-auth";
 import { appDeployments, appsTable, appUsers } from "@/db/schema";
 import { db } from "@/db/schema";
 import { freestyle } from "@/lib/freestyle";
+import { vercelDeployment } from "@/lib/vercel";
 import { eq, sql } from "drizzle-orm";
 import {
   adjectives,
@@ -11,7 +12,13 @@ import {
   uniqueNamesGenerator,
 } from "unique-names-generator";
 
-export async function publishApp({ appId }: { appId: string }) {
+export async function publishApp({ 
+  appId, 
+  deploymentType = 'freestyle' 
+}: { 
+  appId: string;
+  deploymentType?: 'freestyle' | 'vercel';
+}) {
   const user = await getUser();
 
   if (!user) {
@@ -74,27 +81,54 @@ export async function publishApp({ appId }: { appId: string }) {
     throw new Error("Preview domain is not set. This should not happen.");
   }
 
-  const deployment = await freestyle.deployWeb(
-    {
-      kind: "git",
-      url: `https://git.freestyle.sh/${app.app.gitRepo}`,
-    },
-    {
-      build: true,
-      domains: [previewDomain],
-    }
-  );
+  let deploymentResult;
+  let deploymentId: string;
+  let deploymentUrl: string;
 
-  if (deployment.message) {
-    console.error("Deployment failed:", deployment.message);
-    throw new Error(`Deployment failed`);
+  if (deploymentType === 'vercel') {
+    // Deploy to Vercel
+    const vercelResult = await vercelDeployment.deploySite({
+      projectName: app.app.name || 'vibe-app',
+      gitRepoUrl: `https://git.freestyle.sh/${app.app.gitRepo}`,
+      framework: 'nextjs',
+    });
+
+    if (!vercelResult.success) {
+      throw new Error(`Vercel deployment failed: ${vercelResult.error}`);
+    }
+
+    deploymentId = vercelResult.deploymentId!;
+    deploymentUrl = vercelResult.url!;
+  } else {
+    // Deploy to Freestyle (existing logic)
+    const deployment = await freestyle.deployWeb(
+      {
+        kind: "git",
+        url: `https://git.freestyle.sh/${app.app.gitRepo}`,
+      },
+      {
+        build: true,
+        domains: [previewDomain],
+      }
+    );
+
+    if (deployment.message) {
+      console.error("Deployment failed:", deployment.message);
+      throw new Error(`Deployment failed`);
+    }
+
+    deploymentId = deployment.deploymentId;
+    deploymentUrl = previewDomain;
   }
 
-  db.insert(appDeployments).values({
+  // Store deployment info
+  await db.insert(appDeployments).values({
     appId: app.app.id,
-    deploymentId: deployment.deploymentId,
+    deploymentId: deploymentId,
     createdAt: new Date(),
     commit: "latest",
+    deploymentType: deploymentType,
+    deploymentUrl: deploymentUrl,
   });
 
   return true;

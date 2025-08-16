@@ -32,6 +32,7 @@
     "@stackframe/stack": "^2.8.11",
     "@stripe/stripe-js": "^7.7.0",
     "@tanstack/react-query": "^5.74.11",
+    "@vercel/client": "^15.3.14",
     "ai": "^5.0.0-beta.32",
     "class-variance-authority": "^0.7.1",
     "clsx": "^2.1.1",

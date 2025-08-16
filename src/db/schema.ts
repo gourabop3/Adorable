@@ -67,6 +67,8 @@ export const appDeployments = pgTable("app_deployments", {
   createdAt: timestamp("created_at").notNull().defaultNow(),
   deploymentId: text("deployment_id").notNull(),
   commit: text("commit").notNull(), // sha of the commit
+  deploymentType: text("deployment_type").notNull().default("freestyle"), // "freestyle" | "vercel"
+  deploymentUrl: text("deployment_url"), // URL where the app is deployed
 });
 
 // Billing and subscription tables
