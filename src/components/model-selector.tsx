@@ -10,19 +10,19 @@ import {
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
 
-export type SupportedModelId = "gemini-2.5-pro" | "gemini-2.0-flash-exp" | "gpt-4o" | "claude-3.5-sonnet" | "llama3-8b-8192" | "llama3-70b-8192" | "mixtral-8x7b-32768" | "gemma2-9b-it" | "llama3.1-8b-instant" | "llama3.1-70b-vision";
+export type SupportedModelId = "gemini-2.5-pro" | "gemini-2.0-flash-exp" | "gpt-4o" | "claude-3.5-sonnet" | "gpt-oss-120b" | "gpt-oss-20b" | "deepseek-r1-distill-llama" | "qwen-3-32b" | "llama-4-scout" | "kimi-k2";
 
 export const MODELS: Record<SupportedModelId, { name: string; provider: string }> = {
   "gemini-2.5-pro": { name: "Gemini 2.5 Pro", provider: "google" },
   "gemini-2.0-flash-exp": { name: "Gemini 2.0 Flash (exp)", provider: "google" },
   "gpt-4o": { name: "GPT-4o", provider: "openai" },
   "claude-3.5-sonnet": { name: "Claude 3.5 Sonnet", provider: "anthropic" },
-  "llama3-8b-8192": { name: "Llama 3 8B", provider: "groq" },
-  "llama3-70b-8192": { name: "Llama 3 70B", provider: "groq" },
-  "mixtral-8x7b-32768": { name: "Mixtral 8x7B", provider: "groq" },
-  "gemma2-9b-it": { name: "Gemma 2 9B", provider: "groq" },
-  "llama3.1-8b-instant": { name: "Llama 3.1 8B Instant", provider: "groq" },
-  "llama3.1-70b-vision": { name: "Llama 3.1 70B Vision", provider: "groq" },
+  "gpt-oss-120b": { name: "GPT OSS 120B", provider: "groq" },
+  "gpt-oss-20b": { name: "GPT OSS 20B", provider: "groq" },
+  "deepseek-r1-distill-llama": { name: "DeepSeek R1 Distill Llama", provider: "groq" },
+  "qwen-3-32b": { name: "Qwen 3 32B", provider: "groq" },
+  "llama-4-scout": { name: "Llama 4 Scout", provider: "groq" },
+  "kimi-k2": { name: "Kimi K2", provider: "groq" },
 };
 
 export function ModelSelector({

@@ -44,7 +44,7 @@ export function createBuilderAgentWithModel(modelId: string) {
   } else if (modelId.startsWith("claude")) {
     model = anthropic(modelId);
 
-  } else if (modelId.startsWith("llama") || modelId.startsWith("mixtral") || modelId.startsWith("gemma")) {
+  } else if (modelId.startsWith("gpt-oss") || modelId.startsWith("deepseek") || modelId.startsWith("qwen") || modelId.startsWith("llama-4") || modelId.startsWith("kimi")) {
     model = groq(modelId);
   } else {
     // Default to Google models
