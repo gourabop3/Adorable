@@ -38,7 +38,7 @@ export const builderAgent = new Agent({
 export function createBuilderAgentWithModel(modelId: string) {
   let model;
 
-  if (modelId.startsWith("gpt-oss") || modelId.startsWith("deepseek") || modelId.startsWith("qwen") || modelId.startsWith("llama-4") || modelId.startsWith("kimi")) {
+  if (modelId.startsWith("llama") || modelId.startsWith("mixtral") || modelId.startsWith("gemma")) {
     model = groq(modelId);
   } else if (modelId.startsWith("gpt")) {
     model = openai(modelId);
