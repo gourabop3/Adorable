@@ -100,7 +100,7 @@ export function Footer() {
               </Link>
             </div>
             <div className="text-sm text-gray-500">
-              © 2024 VIBE. All rights reserved.
+              © 2024 VIBE. All rights reserved. • Deployed on Vercel
             </div>
           </div>
         </div>

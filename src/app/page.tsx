@@ -180,6 +180,7 @@ function HomeContent() {
             <p className="text-lg text-neutral-500 text-center mb-8 max-w-2xl mx-auto">
               Transform your ideas into stunning, professional websites in seconds. 
               No coding required. Just describe what you want and watch it come to life.
+              {/* Vercel auto-deploy trigger - updated deployment info */}
             </p>
 
             {/* Credit Balance Banner */}

@@ -4,7 +4,7 @@
 
 # Vibe
 
-A modern AI-powered app builder with real-time streaming and beautiful UI generation.
+A modern AI-powered app builder with real-time streaming, beautiful UI generation, and Vercel deployment support.
 
 ## Features
 
@@ -13,6 +13,8 @@ A modern AI-powered app builder with real-time streaming and beautiful UI genera
 - 📱 Responsive design for all devices
 - 🚀 Real-time streaming capabilities
 - 🔧 Enhanced tool messages and stream handling
+- 🚀 Vercel deployment integration
+- 🎯 Dual deployment options (Freestyle + Vercel)
 
 ## Getting Started
 
@@ -33,10 +35,12 @@ A modern AI-powered app builder with real-time streaming and beautiful UI genera
 - TypeScript
 - Tailwind CSS
 - AI SDK integration
+- Vercel deployment
+- Groq AI models
 
 ---
 
-*Last updated: Auto-deploy trigger* 🚀
+*Last updated: Vercel auto-deploy trigger* 🚀
 
 ## OpenAI-compatible provider (ChatAnywhere)
 
