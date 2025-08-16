@@ -53,32 +53,36 @@ export async function publishApp({
     throw new Error("User does not have permission to publish this app");
   }
 
-  if (!process.env.PREVIEW_DOMAIN) {
-    throw new Error("Preview domain is not configured");
-  }
-
   let previewDomain = app.app.previewDomain;
-  if (app.app.previewDomain === null) {
-    const domainPrefix = uniqueNamesGenerator({
-      dictionaries: [adjectives, animals],
-      separator: "",
-      length: 2,
-    });
-    const domain = `${domainPrefix}.${process.env.PREVIEW_DOMAIN}`;
+  
+  // Only check preview domain for Freestyle deployment
+  if (deploymentType === 'freestyle') {
+    if (!process.env.PREVIEW_DOMAIN) {
+      throw new Error("Preview domain is not configured for Freestyle deployment");
+    }
 
-    console.log("Generated domain:", domain);
+    if (app.app.previewDomain === null) {
+      const domainPrefix = uniqueNamesGenerator({
+        dictionaries: [adjectives, animals],
+        separator: "",
+        length: 2,
+      });
+      const domain = `${domainPrefix}.${process.env.PREVIEW_DOMAIN}`;
 
-    await db
-      .update(appsTable)
-      .set({ previewDomain: domain })
-      .where(eq(appsTable.id, appId))
-      .execute();
+      console.log("Generated domain:", domain);
 
-    previewDomain = domain;
-  }
+      await db
+        .update(appsTable)
+        .set({ previewDomain: domain })
+        .where(eq(appsTable.id, appId))
+        .execute();
 
-  if (!previewDomain) {
-    throw new Error("Preview domain is not set. This should not happen.");
+      previewDomain = domain;
+    }
+
+    if (!previewDomain) {
+      throw new Error("Preview domain is not set. This should not happen.");
+    }
   }
 
   let deploymentResult;
@@ -101,6 +105,10 @@ export async function publishApp({
     deploymentUrl = vercelResult.url!;
   } else {
     // Deploy to Freestyle (existing logic)
+    if (!previewDomain) {
+      throw new Error("Preview domain is required for Freestyle deployment");
+    }
+    
     const deployment = await freestyle.deployWeb(
       {
         kind: "git",
