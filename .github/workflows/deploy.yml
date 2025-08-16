@@ -18,4 +18,4 @@
 #       - run: |
 #           npx freestyle-sh deploy \
 #             --build \
-#             --domain=adorable.dev
+#             --domain=vibe.dev

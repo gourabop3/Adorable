@@ -55,7 +55,7 @@ export default function Chat(props: {
 			},
 			{
 				headers: {
-					"Adorable-App-Id": props.appId,
+					"Vibe-App-Id": props.appId,
 					...(props.selectedModel && { "x-selected-model": props.selectedModel }),
 				},
 			}
@@ -87,7 +87,7 @@ export default function Chat(props: {
 			},
 			{
 				headers: {
-					"Adorable-App-Id": props.appId,
+					"Vibe-App-Id": props.appId,
 					...(props.selectedModel && { "x-selected-model": props.selectedModel }),
 				},
 			}
@@ -118,7 +118,7 @@ export default function Chat(props: {
 						fetch("/api/chat/" + props.appId + "/stream", {
 							method: "DELETE",
 							headers: {
-								"Adorable-App-Id": props.appId,
+								"Vibe-App-Id": props.appId,
 							},
 						});
 					}}

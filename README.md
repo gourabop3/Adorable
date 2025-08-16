@@ -2,7 +2,7 @@
   <img src="icon.png" alt="description" width="75">
 </p>
 
-# Adorable
+# Vibe
 
 A modern AI-powered app builder with real-time streaming and beautiful UI generation.
 
