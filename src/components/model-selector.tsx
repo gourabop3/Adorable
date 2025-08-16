@@ -10,14 +10,17 @@ import {
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
 
-export type SupportedModelId = "gemini-2.5-pro" | "gemini-2.0-flash-exp" | "gpt-4o" | "claude-3.5-sonnet" | "chatanywhere/gpt-4o";
+export type SupportedModelId = "gemini-2.5-pro" | "gemini-2.0-flash-exp" | "gpt-4o" | "claude-3.5-sonnet" | "llama-3.1-8b" | "llama-3.1-70b" | "mixtral-8x7b" | "gemma-2-9b";
 
 export const MODELS: Record<SupportedModelId, { name: string; provider: string }> = {
   "gemini-2.5-pro": { name: "Gemini 2.5 Pro", provider: "google" },
   "gemini-2.0-flash-exp": { name: "Gemini 2.0 Flash (exp)", provider: "google" },
   "gpt-4o": { name: "GPT-4o", provider: "openai" },
   "claude-3.5-sonnet": { name: "Claude 3.5 Sonnet", provider: "anthropic" },
-  "chatanywhere/gpt-4o": { name: "GPT-4o (ChatAnywhere)", provider: "chatanywhere" },
+  "llama-3.1-8b": { name: "Llama 3.1 8B", provider: "groq" },
+  "llama-3.1-70b": { name: "Llama 3.1 70B", provider: "groq" },
+  "mixtral-8x7b": { name: "Mixtral 8x7B", provider: "groq" },
+  "gemma-2-9b": { name: "Gemma 2 9B", provider: "groq" },
 };
 
 export function ModelSelector({
