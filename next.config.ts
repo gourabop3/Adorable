@@ -2,7 +2,7 @@ import type { NextConfig } from "next";
 
 const nextConfig: NextConfig = {
   experimental: {
-    serverExternalPackages: ["@mastra/core", "@mastra/mcp", "@mastra/memory", "@mastra/pg"],
+    // Next.js 15 configuration
   },
   images: {
     domains: ["localhost", "vercel.app", "freestyle.dev"],

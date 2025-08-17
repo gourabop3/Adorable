@@ -1,72 +1,152 @@
 "use client";
 
+import { useState, useRef, useEffect } from "react";
+import { Check, ChevronDown, Brain, Zap, Crown, Sparkles } from "lucide-react";
 import { cn } from "@/lib/utils";
-import { ChevronDownIcon } from "lucide-react";
-import { Button } from "@/components/ui/button";
-import {
-  DropdownMenu,
-  DropdownMenuContent,
-  DropdownMenuItem,
-  DropdownMenuTrigger,
-} from "@/components/ui/dropdown-menu";
 
-export type SupportedModelId = "gemini-2.5-pro" | "gemini-2.0-flash-exp" | "gpt-4o" | "claude-3.5-sonnet" | "llama3-8b-8192" | "llama3-70b-8192" | "mixtral-8x7b-32768" | "gemma2-9b-it" | "llama3.1-8b-instant" | "llama3.1-70b-vision";
+const models = [
+  {
+    id: "gemini-2.5-pro",
+    name: "Gemini 2.5 Pro",
+    description: "Google's most advanced AI model",
+    icon: <Brain className="w-4 h-4" />,
+    color: "from-blue-500 to-purple-500",
+    tier: "premium"
+  },
+  {
+    id: "gpt-4o",
+    name: "GPT-4o",
+    description: "OpenAI's latest flagship model",
+    icon: <Crown className="w-4 h-4" />,
+    color: "from-emerald-500 to-teal-500",
+    tier: "premium"
+  },
+  {
+    id: "claude-3-5-sonnet",
+    name: "Claude 3.5 Sonnet",
+    description: "Anthropic's balanced AI model",
+    icon: <Sparkles className="w-4 h-4" />,
+    color: "from-orange-500 to-red-500",
+    tier: "premium"
+  },
+  {
+    id: "gpt-3.5-turbo",
+    name: "GPT-3.5 Turbo",
+    description: "Fast and cost-effective",
+    icon: <Zap className="w-4 h-4" />,
+    color: "from-green-500 to-emerald-500",
+    tier: "standard"
+  },
+  {
+    id: "claude-3-haiku",
+    name: "Claude 3 Haiku",
+    description: "Lightning fast responses",
+    icon: <Zap className="w-4 h-4" />,
+    color: "from-purple-500 to-pink-500",
+    tier: "standard"
+  }
+];
 
-export const MODELS: Record<SupportedModelId, { name: string; provider: string }> = {
-  "gemini-2.5-pro": { name: "Gemini 2.5 Pro", provider: "google" },
-  "gemini-2.0-flash-exp": { name: "Gemini 2.0 Flash (exp)", provider: "google" },
-  "gpt-4o": { name: "GPT-4o", provider: "openai" },
-  "claude-3.5-sonnet": { name: "Claude 3.5 Sonnet", provider: "anthropic" },
-  "llama3-8b-8192": { name: "Llama 3 8B", provider: "groq" },
-  "llama3-70b-8192": { name: "Llama 3 70B", provider: "groq" },
-  "mixtral-8x7b-32768": { name: "Mixtral 8x7B", provider: "groq" },
-  "gemma2-9b-it": { name: "Gemma 2 9B", provider: "groq" },
-  "llama3.1-8b-instant": { name: "Llama 3.1 8B Instant", provider: "groq" },
-  "llama3.1-70b-vision": { name: "Llama 3.1 70B Vision", provider: "groq" },
-};
+interface ModelSelectorProps {
+  value: string;
+  onChange: (value: string) => void;
+}
 
-export function ModelSelector({
-  value = "gemini-2.5-pro",
-  onChange,
-  className,
-}: {
-  value?: SupportedModelId;
-  onChange: (value: SupportedModelId) => void;
-  className?: string;
-}) {
+export function ModelSelector({ value, onChange }: ModelSelectorProps) {
+  const [isOpen, setIsOpen] = useState(false);
+  const dropdownRef = useRef<HTMLDivElement>(null);
+
+  const selectedModel = models.find(m => m.id === value) || models[0];
+
+  useEffect(() => {
+    function handleClickOutside(event: MouseEvent) {
+      if (dropdownRef.current && !dropdownRef.current.contains(event.target as Node)) {
+        setIsOpen(false);
+      }
+    }
+
+    document.addEventListener("mousedown", handleClickOutside);
+    return () => document.removeEventListener("mousedown", handleClickOutside);
+  }, []);
+
   return (
-    <div className={cn("relative", className)}>
-      <DropdownMenu>
-        <DropdownMenuTrigger asChild>
-          <Button
-            variant="outline"
-            size="sm"
-            className="h-7 gap-2 px-2 text-xs bg-transparent border-none hover:bg-gray-100 hover:bg-opacity-50 shadow-none"
-            style={{ boxShadow: "none" }}
-          >
-            {MODELS[value].name}
-            <ChevronDownIcon className="h-3 w-3 opacity-70" />
-          </Button>
-        </DropdownMenuTrigger>
-        <DropdownMenuContent
-          align="start"
-          className="min-w-[12rem] !shadow-none border border-gray-200"
-          style={{ boxShadow: "none" }}
-        >
-          {Object.entries(MODELS).map(([key, model]) => (
-            <DropdownMenuItem
-              key={key}
-              onClick={() => onChange(key as SupportedModelId)}
-              className="gap-2 text-xs"
-            >
-              <div className="flex flex-col items-start">
-                <span className="font-medium">{model.name}</span>
-                <span className="text-xs text-gray-500 capitalize">{model.provider}</span>
-              </div>
-            </DropdownMenuItem>
-          ))}
-        </DropdownMenuContent>
-      </DropdownMenu>
+    <div className="relative" ref={dropdownRef}>
+      <button
+        type="button"
+        className={cn(
+          "flex items-center justify-between w-full px-4 py-3 text-left bg-white border border-gray-200 rounded-xl shadow-sm hover:border-gray-300 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all duration-200",
+          isOpen && "ring-2 ring-blue-500 border-transparent"
+        )}
+        onClick={() => setIsOpen(!isOpen)}
+      >
+        <div className="flex items-center space-x-3">
+          <div className={cn(
+            "w-8 h-8 rounded-lg flex items-center justify-center text-white",
+            `bg-gradient-to-r ${selectedModel.color}`
+          )}>
+            {selectedModel.icon}
+          </div>
+          <div>
+            <div className="font-medium text-gray-900 flex items-center space-x-2">
+              <span>{selectedModel.name}</span>
+              {selectedModel.tier === "premium" && (
+                <span className="px-2 py-1 text-xs bg-gradient-to-r from-amber-400 to-orange-400 text-white rounded-full font-medium">
+                  PRO
+                </span>
+              )}
+            </div>
+            <div className="text-sm text-gray-500">{selectedModel.description}</div>
+          </div>
+        </div>
+        <ChevronDown 
+          className={cn(
+            "w-5 h-5 text-gray-400 transition-transform duration-200",
+            isOpen && "transform rotate-180"
+          )} 
+        />
+      </button>
+
+      {isOpen && (
+        <div className="absolute z-50 w-full mt-2 bg-white border border-gray-200 rounded-xl shadow-lg">
+          <div className="py-2">
+            {models.map((model) => (
+              <button
+                key={model.id}
+                type="button"
+                className={cn(
+                  "w-full flex items-center space-x-3 px-4 py-3 text-left hover:bg-gray-50 transition-colors duration-150",
+                  value === model.id && "bg-blue-50 border-r-2 border-blue-500"
+                )}
+                onClick={() => {
+                  onChange(model.id);
+                  setIsOpen(false);
+                }}
+              >
+                <div className={cn(
+                  "w-8 h-8 rounded-lg flex items-center justify-center text-white",
+                  `bg-gradient-to-r ${model.color}`
+                )}>
+                  {model.icon}
+                </div>
+                <div className="flex-1">
+                  <div className="font-medium text-gray-900 flex items-center space-x-2">
+                    <span>{model.name}</span>
+                    {model.tier === "premium" && (
+                      <span className="px-2 py-1 text-xs bg-gradient-to-r from-amber-400 to-orange-400 text-white rounded-full font-medium">
+                        PRO
+                      </span>
+                    )}
+                  </div>
+                  <div className="text-sm text-gray-500">{model.description}</div>
+                </div>
+                {value === model.id && (
+                  <Check className="w-5 h-5 text-blue-500" />
+                )}
+              </button>
+            ))}
+          </div>
+        </div>
+      )}
     </div>
   );
 }

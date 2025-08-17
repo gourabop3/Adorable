@@ -15,6 +15,7 @@ import { ModelSelector } from "@/components/model-selector";
 import { CreditBalanceBanner } from "@/components/credit-balance-banner";
 import { Footer } from "@/components/footer";
 import { Navigation } from "@/components/navigation";
+import { ArrowRight, Sparkles, Zap, Shield, Globe, Code, Rocket, CheckCircle } from "lucide-react";
 
 const queryClient = new QueryClient();
 
@@ -27,7 +28,7 @@ function HomeContent() {
   const [checkingCredits, setCheckingCredits] = useState(false);
   const router = useRouter();
   const searchParams = useSearchParams();
-  const { billing, refetch, isAuthenticated } = useBilling();
+  const { billing, refetch } = useBilling();
 
   // Check for payment success parameters
   const success = searchParams.get('success');
@@ -35,36 +36,33 @@ function HomeContent() {
   const credits = searchParams.get('credits');
   const appCreated = searchParams.get('app_created');
 
-      // Development mode detection
-    const isDevelopment = process.env.NODE_ENV === 'development';
-
-    useEffect(() => {
-      if (success && !showPaymentSuccess) {
-        setShowPaymentSuccess(true);
-        // Auto-hide the banner after 10 seconds
-        const timer = setTimeout(() => {
-          setShowPaymentSuccess(false);
-          // Clear the success parameter from URL
-          const newUrl = new URL(window.location.href);
-          newUrl.searchParams.delete('success');
-          newUrl.searchParams.delete('plan');
-          newUrl.searchParams.delete('credits');
-          window.history.replaceState({}, '', newUrl.toString());
-        }, 10000);
-        return () => clearTimeout(timer);
-      }
-    }, [success, showPaymentSuccess]);
-
-    // Refresh billing data when user returns from app creation
-    useEffect(() => {
-      if (appCreated === 'true') {
-        refetch();
-        // Remove the parameter from URL
+  useEffect(() => {
+    if (success && !showPaymentSuccess) {
+      setShowPaymentSuccess(true);
+      // Auto-hide the banner after 10 seconds
+      const timer = setTimeout(() => {
+        setShowPaymentSuccess(false);
+        // Clear the success parameter from URL
         const newUrl = new URL(window.location.href);
-        newUrl.searchParams.delete('app_created');
+        newUrl.searchParams.delete('success');
+        newUrl.searchParams.delete('plan');
+        newUrl.searchParams.delete('credits');
         window.history.replaceState({}, '', newUrl.toString());
-      }
-    }, [appCreated, refetch]);
+      }, 10000);
+      return () => clearTimeout(timer);
+    }
+  }, [success, showPaymentSuccess]);
+
+  // Refresh billing data when user returns from app creation
+  useEffect(() => {
+    if (appCreated === 'true') {
+      refetch();
+      // Remove the parameter from URL
+      const newUrl = new URL(window.location.href);
+      newUrl.searchParams.delete('app_created');
+      window.history.replaceState({}, '', newUrl.toString());
+    }
+  }, [appCreated, refetch]);
 
   const handleSubmit = async () => {
     // Generate a unique request ID for tracking
@@ -154,8 +152,7 @@ function HomeContent() {
   return (
     <QueryClientProvider client={queryClient}>
       <Navigation />
-      <main className="min-h-screen p-4 relative">
-
+      <main className="min-h-screen bg-gradient-to-br from-slate-50 via-blue-50 to-indigo-50">
         {showPaymentSuccess && (
           <PaymentSuccessBanner
             plan={plan}
@@ -172,74 +169,187 @@ function HomeContent() {
           />
         )}
         
-        <div>
-          <div className="w-full max-w-lg px-4 sm:px-0 mx-auto flex flex-col items-center mt-12 sm:mt-16 md:mt-24 lg:mt-32 col-start-1 col-end-1 row-start-1 row-end-1 z-10">
-            <p className="text-neutral-600 text-center mb-4 sm:mb-6 text-2xl sm:text-3xl md:text-4xl lg:text-5xl font-bold">
-              Build Websites with AI
-            </p>
-            <p className="text-lg text-neutral-500 text-center mb-8 max-w-2xl mx-auto">
-              Transform your ideas into stunning, professional websites in seconds. 
-              No coding required. Just describe what you want and watch it come to life.
-              {/* Vercel auto-deploy trigger - updated deployment info */}
-            </p>
+        {/* Hero Section */}
+        <section className="relative overflow-hidden pt-20 pb-16">
+          <div className="absolute inset-0 bg-gradient-to-r from-blue-600/10 via-purple-600/10 to-indigo-600/10"></div>
+          <div className="relative max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+            <div className="text-center">
+              {/* Badge */}
+              <div className="inline-flex items-center px-4 py-2 rounded-full bg-blue-100 text-blue-800 text-sm font-medium mb-8">
+                <Sparkles className="w-4 h-4 mr-2" />
+                AI-Powered Website Builder
+              </div>
+              
+              {/* Main Headline */}
+              <h1 className="text-5xl md:text-6xl lg:text-7xl font-bold text-gray-900 mb-6 leading-tight">
+                Build Websites with
+                <span className="bg-gradient-to-r from-blue-600 via-purple-600 to-indigo-600 bg-clip-text text-transparent"> AI Magic</span>
+              </h1>
+              
+              {/* Subtitle */}
+              <p className="text-xl md:text-2xl text-gray-600 mb-12 max-w-4xl mx-auto leading-relaxed">
+                Transform your ideas into stunning, professional websites in seconds. 
+                No coding required. Just describe what you want and watch it come to life.
+              </p>
 
-            {/* Credit Balance Banner */}
-            <CreditBalanceBanner />
+              {/* Credit Balance Banner */}
+              <CreditBalanceBanner />
 
-            <div className="w-full relative my-4 sm:my-5">
-              <div className="relative w-full max-w-full overflow-hidden">
-                <div className="w-full bg-accent rounded-md relative z-10 border transition-colors">
+              {/* Main Input Section */}
+              <div className="max-w-4xl mx-auto mb-16">
+                <div className="bg-white rounded-2xl shadow-2xl border border-gray-200 p-6 backdrop-blur-sm">
+                  <div className="flex flex-col lg:flex-row gap-4 mb-6">
+                    <FrameworkSelector value={framework} onChange={setFramework} />
+                    <ModelSelector value={model} onChange={setModel} />
+                  </div>
+                  
                   <PromptInput
-                    leftSlot={
-                      <div className="flex flex-col sm:flex-row items-start sm:items-center gap-2 sm:gap-1 w-full sm:w-auto">
-                        <FrameworkSelector value={framework} onChange={setFramework} />
-                        <ModelSelector value={model as any} onChange={setModel as any} />
-                      </div>
-                    }
                     isLoading={isLoading}
                     value={prompt}
                     onValueChange={setPrompt}
                     onSubmit={handleSubmit}
-                    className="relative z-10 border-none bg-transparent shadow-none focus-within:border-gray-400 focus-within:ring-1 focus-within:ring-gray-200 transition-all duration-200 ease-in-out"
+                    className="relative z-10"
                   >
                     <PromptInputTextareaWithTypingAnimation />
                     <PromptInputActions>
                       <Button
-                        variant={"ghost"}
-                        size="sm"
+                        size="lg"
                         onClick={handleSubmit}
                         disabled={isLoading || !prompt.trim()}
-                        className="h-8 sm:h-7 text-xs w-full sm:w-auto"
+                        className="bg-gradient-to-r from-blue-600 to-purple-600 hover:from-blue-700 hover:to-purple-700 text-white px-8 py-3 rounded-xl font-semibold transition-all duration-200 transform hover:scale-105 shadow-lg"
                       >
-                        <span className="hidden sm:inline">Build Website ⏎</span>
-                        <span className="sm:hidden">Build Website ⏎</span>
+                        <Rocket className="w-5 h-5 mr-2" />
+                        Build Website
+                        <ArrowRight className="w-5 h-5 ml-2" />
                       </Button>
                     </PromptInputActions>
                   </PromptInput>
                 </div>
               </div>
+
+              {/* Examples */}
+              <Examples setPrompt={setPrompt} />
             </div>
-            <Examples setPrompt={setPrompt} />
-            <div className="mt-6 sm:mt-8 mb-12 sm:mb-16">
-              <div className="text-center">
-                <p className="text-sm text-gray-500 mb-4">
-                  Trusted by thousands of creators worldwide
-                </p>
-                <div className="flex justify-center space-x-6 text-xs text-gray-400">
-                  <span>⚡ Lightning Fast</span>
-                  <span>🎨 Beautiful Design</span>
-                  <span>🔒 Secure & Reliable</span>
-                </div>
+          </div>
+        </section>
+
+        {/* Features Section */}
+        <section className="py-20 bg-white">
+          <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+            <div className="text-center mb-16">
+              <h2 className="text-4xl font-bold text-gray-900 mb-4">
+                Why Choose Vibe?
+              </h2>
+              <p className="text-xl text-gray-600 max-w-3xl mx-auto">
+                Built for developers, designers, and entrepreneurs who want to move fast without sacrificing quality.
+              </p>
+            </div>
+            
+            <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-8">
+              <FeatureCard
+                icon={<Zap className="w-8 h-8" />}
+                title="Lightning Fast"
+                description="Generate complete websites in seconds, not hours. Our AI understands your vision and executes it perfectly."
+                color="blue"
+              />
+              <FeatureCard
+                icon={<Code className="w-8 h-8" />}
+                title="Production Ready"
+                description="Every generated website follows best practices, is fully responsive, and ready for production deployment."
+                color="purple"
+              />
+              <FeatureCard
+                icon={<Shield className="w-8 h-8" />}
+                title="Enterprise Grade"
+                description="Built with security, scalability, and maintainability in mind. Your success is our priority."
+                color="green"
+              />
+              <FeatureCard
+                icon={<Globe className="w-8 h-8" />}
+                title="Global Deployment"
+                description="Deploy to Vercel, Freestyle, or your own infrastructure with just one click."
+                color="indigo"
+              />
+              <FeatureCard
+                icon={<Sparkles className="w-8 h-8" />}
+                title="AI-Powered"
+                description="Leverage the latest AI models including GPT-4, Claude, Gemini, and more for optimal results."
+                color="pink"
+              />
+              <FeatureCard
+                icon={<CheckCircle className="w-8 h-8" />}
+                title="No Code Required"
+                description="Focus on your business logic while we handle the technical implementation. Perfect for non-developers."
+                color="emerald"
+              />
+            </div>
+          </div>
+        </section>
+
+        {/* Stats Section */}
+        <section className="py-20 bg-gradient-to-r from-blue-600 to-purple-600 text-white">
+          <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+            <div className="grid md:grid-cols-3 gap-8 text-center">
+              <div>
+                <div className="text-4xl font-bold mb-2">10,000+</div>
+                <div className="text-blue-100">Websites Built</div>
+              </div>
+              <div>
+                <div className="text-4xl font-bold mb-2">99.9%</div>
+                <div className="text-blue-100">Uptime</div>
+              </div>
+              <div>
+                <div className="text-4xl font-bold mb-2">24/7</div>
+                <div className="text-blue-100">Support</div>
               </div>
             </div>
           </div>
-        </div>
-        <div className="border-t py-8 mx-0 sm:-mx-4">
-          <UserApps />
-        </div>
+        </section>
+
+        {/* User Apps Section */}
+        <section className="py-20 bg-gray-50">
+          <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+            <div className="text-center mb-16">
+              <h2 className="text-4xl font-bold text-gray-900 mb-4">
+                Your Creations
+              </h2>
+              <p className="text-xl text-gray-600">
+                See all the amazing websites you've built with Vibe
+              </p>
+            </div>
+            <UserApps />
+          </div>
+        </section>
+
         <Footer />
       </main>
     </QueryClientProvider>
+  );
+}
+
+function FeatureCard({ icon, title, description, color }: {
+  icon: React.ReactNode;
+  title: string;
+  description: string;
+  color: string;
+}) {
+  const colorClasses = {
+    blue: "text-blue-600 bg-blue-100",
+    purple: "text-purple-600 bg-purple-100",
+    green: "text-green-600 bg-green-100",
+    indigo: "text-indigo-600 bg-indigo-100",
+    pink: "text-pink-600 bg-pink-100",
+    emerald: "text-emerald-600 bg-emerald-100",
+  };
+
+  return (
+    <div className="bg-white rounded-2xl p-8 shadow-lg border border-gray-200 hover:shadow-xl transition-all duration-300 transform hover:-translate-y-1">
+      <div className={`w-16 h-16 rounded-2xl ${colorClasses[color]} flex items-center justify-center mb-6`}>
+        {icon}
+      </div>
+      <h3 className="text-xl font-semibold text-gray-900 mb-4">{title}</h3>
+      <p className="text-gray-600 leading-relaxed">{description}</p>
+    </div>
   );
 }
 
@@ -252,33 +362,51 @@ export default function Home() {
 }
 
 function Examples({ setPrompt }: { setPrompt: (text: string) => void }) {
+  const examples = [
+    {
+      title: "E-commerce Store",
+      description: "Modern online store with product catalog, shopping cart, and payment integration",
+      prompt: "Build a modern e-commerce website with product catalog, shopping cart, and payment integration.",
+      icon: "🛍️"
+    },
+    {
+      title: "Business Website",
+      description: "Professional business site with company information, services, and contact forms",
+      prompt: "Create a professional business website with company information, services, and contact forms.",
+      icon: "🏢"
+    },
+    {
+      title: "Portfolio Site",
+      description: "Stunning portfolio to showcase your work, skills, and professional experience",
+      prompt: "Build a stunning portfolio website to showcase my work, skills, and professional experience.",
+      icon: "🎨"
+    },
+    {
+      title: "Blog Platform",
+      description: "Content management system with beautiful typography and reader engagement",
+      prompt: "Create a modern blog platform with beautiful typography, categories, and reader engagement features.",
+      icon: "📝"
+    }
+  ];
+
   return (
-    <div className="mt-2">
-      <div className="flex flex-col sm:flex-row flex-wrap justify-center gap-2 px-2">
-        <ExampleButton
-          text="E-commerce Store"
-          promptText="Build a modern e-commerce website with product catalog, shopping cart, and payment integration."
-          onClick={(text) => {
-            console.log("Example clicked:", text);
-            setPrompt(text);
-          }}
-        />
-        <ExampleButton
-          text="Business Website"
-          promptText="Create a professional business website with company information, services, and contact forms."
-          onClick={(text) => {
-            console.log("Example clicked:", text);
-            setPrompt(text);
-          }}
-        />
-        <ExampleButton
-          text="Portfolio Site"
-          promptText="Build a stunning portfolio website to showcase my work, skills, and professional experience."
-          onClick={(text) => {
-            console.log("Example clicked:", text);
-            setPrompt(text);
-          }}
-        />
+    <div className="mb-16">
+      <h3 className="text-2xl font-semibold text-gray-900 mb-8 text-center">
+        Popular Use Cases
+      </h3>
+      <div className="grid md:grid-cols-2 lg:grid-cols-4 gap-4 max-w-6xl mx-auto">
+        {examples.map((example, index) => (
+          <ExampleButton
+            key={index}
+            text={example.title}
+            promptText={example.prompt}
+            onClick={(text) => {
+              console.log("Example clicked:", text);
+              setPrompt(text);
+            }}
+            className="bg-white hover:bg-gray-50 border border-gray-200 rounded-xl p-4 text-center transition-all duration-200 hover:shadow-md"
+          />
+        ))}
       </div>
     </div>
   );

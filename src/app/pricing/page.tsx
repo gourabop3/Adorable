@@ -1,187 +1,241 @@
-import { Button } from "@/components/ui/button";
-import { Check } from "lucide-react";
-import Link from "next/link";
+"use client";
 
-const pricingPlans = [
-  {
-    name: "Starter",
-    price: "Free",
-    description: "Perfect for trying out VIBE",
-    features: [
-      "3 AI-generated websites",
-      "Basic templates",
-      "Community support",
-      "Standard hosting",
-      "1GB storage"
-    ],
-    cta: "Get Started Free",
-    popular: false
-  },
-  {
-    name: "Pro",
-    price: "$29",
-    period: "/month",
-    description: "For professionals and small teams",
-    features: [
-      "Unlimited AI-generated websites",
-      "Premium templates",
-      "Priority support",
-      "Custom domains",
-      "10GB storage",
-      "Advanced analytics",
-      "Team collaboration",
-      "API access"
-    ],
-    cta: "Start Pro Trial",
-    popular: true
-  },
-  {
-    name: "Enterprise",
-    price: "Custom",
-    description: "For large organizations",
-    features: [
-      "Everything in Pro",
-      "Custom AI training",
-      "Dedicated support",
-      "White-label solutions",
-      "Unlimited storage",
-      "Advanced security",
-      "SLA guarantees",
-      "Custom integrations"
-    ],
-    cta: "Contact Sales",
-    popular: false
-  }
-];
+import { useState } from "react";
+import { Button } from "@/components/ui/button";
+import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
+import { Badge } from "@/components/ui/badge";
+import { Check, Sparkles, Zap, Crown, Star } from "lucide-react";
+import { Navigation } from "@/components/navigation";
+import { Footer } from "@/components/footer";
 
 export default function PricingPage() {
+  const [isAnnual, setIsAnnual] = useState(true);
+
+  const plans = [
+    {
+      name: "Starter",
+      description: "Perfect for individuals and small projects",
+      price: isAnnual ? 9 : 12,
+      credits: 100,
+      features: [
+        "100 AI website generations",
+        "Basic templates",
+        "Community support",
+        "Standard AI models",
+        "Basic analytics",
+        "1 project at a time"
+      ],
+      popular: false,
+      icon: <Zap className="w-6 h-6" />,
+      color: "from-blue-500 to-cyan-500"
+    },
+    {
+      name: "Pro",
+      description: "Ideal for professionals and growing businesses",
+      price: isAnnual ? 29 : 39,
+      credits: 500,
+      features: [
+        "500 AI website generations",
+        "Premium templates",
+        "Priority support",
+        "Advanced AI models (GPT-4, Claude)",
+        "Advanced analytics",
+        "Unlimited projects",
+        "Custom domains",
+        "Team collaboration"
+      ],
+      popular: true,
+      icon: <Crown className="w-6 h-6" />,
+      color: "from-purple-500 to-pink-500"
+    },
+    {
+      name: "Enterprise",
+      description: "For large teams and organizations",
+      price: isAnnual ? 99 : 129,
+      credits: 2000,
+      features: [
+        "2000 AI website generations",
+        "Custom templates",
+        "24/7 dedicated support",
+        "All AI models including custom",
+        "Enterprise analytics",
+        "Unlimited projects",
+        "Custom domains & SSL",
+        "Advanced team management",
+        "API access",
+        "White-label options"
+      ],
+      popular: false,
+      icon: <Star className="w-6 h-6" />,
+      color: "from-emerald-500 to-teal-500"
+    }
+  ];
+
   return (
-    <div className="min-h-screen bg-white">
-      {/* Header */}
-      <div className="bg-gradient-to-r from-purple-600 to-blue-600 text-white">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-24 text-center">
-          <h1 className="text-4xl md:text-6xl font-bold mb-6">
-            Simple, Transparent Pricing
-          </h1>
-          <p className="text-xl md:text-2xl text-purple-100 max-w-3xl mx-auto">
-            Choose the plan that's right for you. Start free and scale as you grow.
-          </p>
-        </div>
-      </div>
+    <div className="min-h-screen bg-gradient-to-br from-slate-50 via-blue-50 to-indigo-50">
+      <Navigation />
+      
+      <main className="pt-20">
+        {/* Header */}
+        <section className="text-center py-20">
+          <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8">
+            <Badge className="mb-6 bg-blue-100 text-blue-800 hover:bg-blue-100">
+              <Sparkles className="w-4 h-4 mr-2" />
+              Pricing Plans
+            </Badge>
+            <h1 className="text-5xl md:text-6xl font-bold text-gray-900 mb-6">
+              Choose Your Plan
+            </h1>
+            <p className="text-xl text-gray-600 mb-12 max-w-3xl mx-auto">
+              Start building amazing websites with AI. Choose the plan that fits your needs and scale as you grow.
+            </p>
 
-      {/* Pricing Cards */}
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-24">
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
-          {pricingPlans.map((plan) => (
-            <div
-              key={plan.name}
-              className={`relative rounded-2xl border-2 p-8 ${
-                plan.popular
-                  ? 'border-purple-500 bg-purple-50 shadow-xl scale-105'
-                  : 'border-gray-200 bg-white shadow-lg'
-              }`}
-            >
-              {plan.popular && (
-                <div className="absolute -top-4 left-1/2 transform -translate-x-1/2">
-                  <span className="bg-purple-600 text-white px-4 py-2 rounded-full text-sm font-semibold">
-                    Most Popular
-                  </span>
-                </div>
-              )}
-
-              <div className="text-center mb-8">
-                <h3 className="text-2xl font-bold text-gray-900 mb-2">
-                  {plan.name}
-                </h3>
-                <div className="mb-4">
-                  <span className="text-4xl font-bold text-gray-900">
-                    {plan.price}
-                  </span>
-                  {plan.period && (
-                    <span className="text-gray-600 text-lg">
-                      {plan.period}
-                    </span>
-                  )}
-                </div>
-                <p className="text-gray-600">{plan.description}</p>
-              </div>
-
-              <ul className="space-y-4 mb-8">
-                {plan.features.map((feature) => (
-                  <li key={feature} className="flex items-start">
-                    <Check className="h-5 w-5 text-green-500 mt-0.5 mr-3 flex-shrink-0" />
-                    <span className="text-gray-700">{feature}</span>
-                  </li>
-                ))}
-              </ul>
-
-              <Button
-                className={`w-full ${
-                  plan.popular
-                    ? 'bg-purple-600 hover:bg-purple-700'
-                    : 'bg-gray-900 hover:bg-gray-800'
+            {/* Billing Toggle */}
+            <div className="flex items-center justify-center space-x-4 mb-16">
+              <span className={`text-lg ${!isAnnual ? 'text-gray-900' : 'text-gray-500'}`}>Monthly</span>
+              <button
+                onClick={() => setIsAnnual(!isAnnual)}
+                className={`relative inline-flex h-8 w-16 items-center rounded-full transition-colors ${
+                  isAnnual ? 'bg-blue-600' : 'bg-gray-200'
                 }`}
-                size="lg"
               >
-                {plan.cta}
-              </Button>
+                <span
+                  className={`inline-block h-6 w-6 transform rounded-full bg-white transition-transform ${
+                    isAnnual ? 'translate-x-9' : 'translate-x-1'
+                  }`}
+                />
+              </button>
+              <span className={`text-lg ${isAnnual ? 'text-gray-900' : 'text-gray-500'}`}>
+                Annual
+                <Badge className="ml-2 bg-green-100 text-green-800 text-xs">Save 20%</Badge>
+              </span>
             </div>
-          ))}
-        </div>
+          </div>
+        </section>
+
+        {/* Pricing Cards */}
+        <section className="py-20">
+          <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
+              {plans.map((plan, index) => (
+                <Card 
+                  key={plan.name}
+                  className={`relative overflow-hidden transition-all duration-300 hover:shadow-2xl hover:-translate-y-2 ${
+                    plan.popular ? 'ring-2 ring-purple-500 shadow-xl' : 'shadow-lg'
+                  }`}
+                >
+                  {plan.popular && (
+                    <div className="absolute top-0 left-0 right-0 bg-gradient-to-r from-purple-500 to-pink-500 text-white text-center py-2 text-sm font-medium">
+                      Most Popular
+                    </div>
+                  )}
+                  
+                  <CardHeader className={`pt-8 ${plan.popular ? 'pt-12' : ''}`}>
+                    <div className={`w-16 h-16 rounded-2xl bg-gradient-to-r ${plan.color} flex items-center justify-center text-white mx-auto mb-4`}>
+                      {plan.icon}
+                    </div>
+                    <CardTitle className="text-2xl font-bold text-center">{plan.name}</CardTitle>
+                    <CardDescription className="text-center text-gray-600">{plan.description}</CardDescription>
+                  </CardHeader>
+
+                  <CardContent className="px-8">
+                    <div className="text-center mb-8">
+                      <div className="text-4xl font-bold text-gray-900">${plan.price}</div>
+                      <div className="text-gray-600">per month</div>
+                      <div className="text-sm text-gray-500 mt-2">
+                        {plan.credits} AI generations included
+                      </div>
+                    </div>
+
+                    <ul className="space-y-4">
+                      {plan.features.map((feature, featureIndex) => (
+                        <li key={featureIndex} className="flex items-start space-x-3">
+                          <Check className="w-5 h-5 text-green-500 mt-0.5 flex-shrink-0" />
+                          <span className="text-gray-700">{feature}</span>
+                        </li>
+                      ))}
+                    </ul>
+                  </CardContent>
+
+                  <CardFooter className="px-8 pb-8">
+                    <Button 
+                      className={`w-full py-3 text-lg font-semibold ${
+                        plan.popular 
+                          ? 'bg-gradient-to-r from-purple-600 to-pink-600 hover:from-purple-700 hover:to-pink-700 text-white'
+                          : 'bg-gray-900 hover:bg-gray-800 text-white'
+                      }`}
+                    >
+                      {plan.name === 'Enterprise' ? 'Contact Sales' : 'Get Started'}
+                    </Button>
+                  </CardFooter>
+                </Card>
+              ))}
+            </div>
+          </div>
+        </section>
 
         {/* FAQ Section */}
-        <div className="mt-24 text-center">
-          <h2 className="text-3xl font-bold text-gray-900 mb-8">
-            Frequently Asked Questions
-          </h2>
-          <div className="max-w-3xl mx-auto space-y-6">
-            <div className="text-left">
-              <h3 className="text-lg font-semibold text-gray-900 mb-2">
-                Can I change plans anytime?
-              </h3>
-              <p className="text-gray-600">
-                Yes! You can upgrade or downgrade your plan at any time. Changes take effect immediately.
-              </p>
+        <section className="py-20 bg-white">
+          <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8">
+            <div className="text-center mb-16">
+              <h2 className="text-4xl font-bold text-gray-900 mb-4">Frequently Asked Questions</h2>
+              <p className="text-xl text-gray-600">Everything you need to know about our pricing and plans</p>
             </div>
-            <div className="text-left">
-              <h3 className="text-lg font-semibold text-gray-900 mb-2">
-                What happens to my websites if I cancel?
-              </h3>
-              <p className="text-gray-600">
-                Your websites remain active for 30 days after cancellation. You can reactivate your account anytime.
-              </p>
-            </div>
-            <div className="text-left">
-              <h3 className="text-lg font-semibold text-gray-900 mb-2">
-                Do you offer refunds?
-              </h3>
-              <p className="text-gray-600">
-                We offer a 30-day money-back guarantee. If you're not satisfied, we'll refund your payment.
-              </p>
+
+            <div className="space-y-8">
+              <div className="border-b border-gray-200 pb-8">
+                <h3 className="text-xl font-semibold text-gray-900 mb-4">How do credits work?</h3>
+                <p className="text-gray-600">
+                  Each AI website generation costs 1 credit. Credits are used when you create a new website or make significant updates. 
+                  Unused credits roll over to the next month.
+                </p>
+              </div>
+
+              <div className="border-b border-gray-200 pb-8">
+                <h3 className="text-xl font-semibold text-gray-900 mb-4">Can I change my plan anytime?</h3>
+                <p className="text-gray-600">
+                  Yes! You can upgrade or downgrade your plan at any time. Changes take effect immediately, and we'll prorate any charges.
+                </p>
+              </div>
+
+              <div className="border-b border-gray-200 pb-8">
+                <h3 className="text-xl font-semibold text-gray-900 mb-4">What AI models are available?</h3>
+                <p className="text-gray-600">
+                  Starter plans include standard AI models. Pro and Enterprise plans include access to GPT-4, Claude, Gemini, and other advanced models.
+                </p>
+              </div>
+
+              <div className="pb-8">
+                <h3 className="text-xl font-semibold text-gray-900 mb-4">Is there a free trial?</h3>
+                <p className="text-gray-600">
+                  Yes! All new users get 50 free credits to start building. No credit card required to begin.
+                </p>
+              </div>
             </div>
           </div>
-        </div>
+        </section>
 
         {/* CTA Section */}
-        <div className="mt-24 text-center">
-          <div className="bg-gradient-to-r from-purple-600 to-blue-600 rounded-2xl p-12 text-white">
-            <h2 className="text-3xl font-bold mb-4">
-              Ready to Build Something Amazing?
-            </h2>
-            <p className="text-xl text-purple-100 mb-8 max-w-2xl mx-auto">
-              Join thousands of creators who are building stunning websites with AI.
+        <section className="py-20 bg-gradient-to-r from-blue-600 to-purple-600 text-white">
+          <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 text-center">
+            <h2 className="text-4xl font-bold mb-6">Ready to Start Building?</h2>
+            <p className="text-xl text-blue-100 mb-8 max-w-2xl mx-auto">
+              Join thousands of creators who are already building amazing websites with AI. 
+              Start your free trial today.
             </p>
             <div className="flex flex-col sm:flex-row gap-4 justify-center">
-              <Button size="lg" variant="secondary">
-                Start Building Free
+              <Button size="lg" className="bg-white text-blue-600 hover:bg-gray-100 px-8 py-3 text-lg font-semibold">
+                Start Free Trial
               </Button>
-              <Button size="lg" variant="outline" className="border-white text-white hover:bg-white hover:text-purple-600">
-                Schedule Demo
+              <Button size="lg" variant="outline" className="border-white text-white hover:bg-white hover:text-blue-600 px-8 py-3 text-lg font-semibold">
+                View Demo
               </Button>
             </div>
           </div>
-        </div>
-      </div>
+        </section>
+      </main>
+
+      <Footer />
     </div>
   );
 }

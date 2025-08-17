@@ -1,31 +1,39 @@
 "use client";
 
 import { useBilling } from "@/contexts/billing-context";
-import { Coins, AlertTriangle } from "lucide-react";
+import { Button } from "@/components/ui/button";
+import { CreditCard, Zap, Crown } from "lucide-react";
+import Link from "next/link";
 
 export function CreditBalanceBanner() {
-  const { billing, isAuthenticated } = useBilling();
+  const { billing } = useBilling();
 
-  if (!isAuthenticated || !billing) {
+  if (!billing) {
     return null;
   }
 
-  const isLowCredits = billing.credits < 5;
-  const isCriticalCredits = billing.credits < 1;
+  const isLowCredits = billing.credits <= 5;
+  const isOutOfCredits = billing.credits === 0;
 
-  if (isCriticalCredits) {
+  if (isOutOfCredits) {
     return (
-      <div className="w-full p-4 bg-red-50 dark:bg-red-950 border border-red-200 dark:border-red-800 rounded-lg mb-6">
-        <div className="flex items-center gap-3">
-          <AlertTriangle className="h-5 w-5 text-red-600" />
-          <div className="flex-1">
-            <h3 className="font-semibold text-red-800 dark:text-red-200">
-              No Credits Available
-            </h3>
-            <p className="text-sm text-red-700 dark:text-red-300">
-              You need at least 1 credit to create apps. Please purchase credits to continue.
-            </p>
+      <div className="bg-gradient-to-r from-red-50 to-pink-50 border border-red-200 rounded-2xl p-6 mb-8 max-w-2xl mx-auto">
+        <div className="flex items-center justify-between">
+          <div className="flex items-center space-x-3">
+            <div className="w-10 h-10 bg-red-100 rounded-full flex items-center justify-center">
+              <CreditCard className="w-5 h-5 text-red-600" />
+            </div>
+            <div>
+              <h3 className="font-semibold text-red-900">Out of Credits</h3>
+              <p className="text-red-700 text-sm">Purchase credits to continue building</p>
+            </div>
           </div>
+          <Link href="/billing">
+            <Button className="bg-red-600 hover:bg-red-700 text-white">
+              <Crown className="w-4 h-4 mr-2" />
+              Get Credits
+            </Button>
+          </Link>
         </div>
       </div>
     );
@@ -33,35 +41,47 @@ export function CreditBalanceBanner() {
 
   if (isLowCredits) {
     return (
-      <div className="w-full p-4 bg-yellow-50 dark:bg-yellow-950 border border-yellow-200 dark:border-yellow-800 rounded-lg mb-6">
-        <div className="flex items-center gap-3">
-          <Coins className="h-5 w-5 text-yellow-600" />
-          <div className="flex-1">
-            <h3 className="font-semibold text-yellow-800 dark:text-yellow-200">
-              Low Credit Balance
-            </h3>
-            <p className="text-sm text-yellow-700 dark:text-yellow-300">
-              You have {billing.credits} credits remaining. Consider purchasing more credits to continue creating apps.
-            </p>
+      <div className="bg-gradient-to-r from-amber-50 to-orange-50 border border-amber-200 rounded-2xl p-6 mb-8 max-w-2xl mx-auto">
+        <div className="flex items-center justify-between">
+          <div className="flex items-center space-x-3">
+            <div className="w-10 h-10 bg-amber-100 rounded-full flex items-center justify-center">
+              <Zap className="w-5 h-5 text-amber-600" />
+            </div>
+            <div>
+              <h3 className="font-semibold text-amber-900">Low Credit Balance</h3>
+              <p className="text-amber-700 text-sm">
+                You have {billing.credits} credits remaining
+              </p>
+            </div>
           </div>
+          <Link href="/billing">
+            <Button variant="outline" className="border-amber-300 text-amber-700 hover:bg-amber-50">
+              <CreditCard className="w-4 h-4 mr-2" />
+              Add Credits
+            </Button>
+          </Link>
         </div>
       </div>
     );
   }
 
   return (
-    <div className="w-full p-3 sm:p-4 bg-blue-50 dark:bg-blue-950 border border-blue-200 dark:border-blue-800 rounded-lg mb-4 sm:mb-6">
-      <div className="flex flex-col sm:flex-row items-start sm:items-center gap-3">
-        <div className="flex items-center gap-2 sm:gap-3">
-          <Coins className="h-5 w-5 text-blue-600 flex-shrink-0" />
-          <div className="flex-1 min-w-0">
-            <h3 className="font-semibold text-blue-800 dark:text-blue-200 text-sm sm:text-base">
-              Credit Balance: {billing.credits} credits
-            </h3>
-            <p className="text-xs sm:text-sm text-blue-700 dark:text-blue-300">
-              You can create {billing.credits} more apps with your current balance.
+    <div className="bg-gradient-to-r from-blue-50 to-indigo-50 border border-blue-200 rounded-2xl p-6 mb-8 max-w-2xl mx-auto">
+      <div className="flex items-center justify-between">
+        <div className="flex items-center space-x-3">
+          <div className="w-10 h-10 bg-blue-100 rounded-full flex items-center justify-center">
+            <Zap className="w-5 h-5 text-blue-600" />
+          </div>
+          <div>
+            <h3 className="font-semibold text-blue-900">Ready to Build</h3>
+            <p className="text-blue-700 text-sm">
+              You have {billing.credits} credits available
             </p>
           </div>
+        </div>
+        <div className="text-right">
+          <div className="text-2xl font-bold text-blue-900">{billing.credits}</div>
+          <div className="text-blue-600 text-sm">credits</div>
         </div>
       </div>
     </div>
