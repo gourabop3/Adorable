@@ -1,6 +1,6 @@
 import { SYSTEM_MESSAGE } from "@/lib/system";
 import { google } from "@ai-sdk/google";
-import { openai, createOpenAI } from "@ai-sdk/openai";
+import { openai } from "@ai-sdk/openai";
 import { anthropic } from "@ai-sdk/anthropic";
 import { groq } from "@ai-sdk/groq";
 import { Agent } from "@mastra/core/agent";

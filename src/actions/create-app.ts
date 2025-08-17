@@ -7,7 +7,6 @@ import { freestyle } from "@/lib/freestyle";
 import { templates } from "@/lib/templates";
 import { memory, builderAgent, createBuilderAgentWithModel } from "@/mastra/agents/builder";
 import { sendMessageWithStreaming } from "@/lib/internal/stream-manager";
-import { google } from "@ai-sdk/google";
 
 export async function createApp({
   initialMessage,
@@ -90,8 +89,8 @@ export async function createApp({
 
   // Store selected model for this app
   if (modelId) {
-    const { redisPublisher } = await import("@/lib/internal/redis");
-    await redisPublisher.set(`app:${app.id}:model`, modelId);
+    const { setKey } = await import("@/lib/internal/redis");
+    await setKey(`app:${app.id}:model`, modelId);
   }
 
   if (initialMessage) {
