@@ -187,7 +187,7 @@ function HomeContent() {
             </div>
 
             <div className="w-full max-w-3xl mt-8 mb-8">
-              <div className="rounded-lg border border-border bg-background p-4">
+              <div className="rounded-lg border border-border bg-background p-3">
                 <PromptInput
                   leftSlot={
                     <div className="flex flex-col sm:flex-row items-start sm:items-center gap-2 w-full sm:w-auto">
@@ -199,13 +199,13 @@ function HomeContent() {
                   value={prompt}
                   onValueChange={setPrompt}
                   onSubmit={handleSubmit}
-                  className="border-none bg-transparent shadow-none focus-within:ring-0 focus-within:border-0"
+                  className="border-none bg-transparent shadow-none focus-within:ring-0 focus-within:border-0 p-0"
                 >
                   <PromptInputTextareaWithTypingAnimation />
                   <PromptInputActions>
                     <Button
                       variant="default"
-                      size="default"
+                      size="sm"
                       onClick={handleSubmit}
                       disabled={isLoading || !prompt.trim()}
                       className="w-full sm:w-auto"
