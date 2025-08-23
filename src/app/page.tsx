@@ -154,7 +154,7 @@ function HomeContent() {
   return (
     <QueryClientProvider client={queryClient}>
       <Navigation />
-      <main className="min-h-screen p-4 relative">
+      <main className="min-h-screen relative overflow-hidden bg-gradient-to-br from-background via-primary/[0.02] to-blue-500/[0.02]">
 
         {showPaymentSuccess && (
           <PaymentSuccessBanner
@@ -172,26 +172,36 @@ function HomeContent() {
           />
         )}
         
-        <div>
-          <div className="w-full max-w-lg px-4 sm:px-0 mx-auto flex flex-col items-center mt-12 sm:mt-16 md:mt-24 lg:mt-32 col-start-1 col-end-1 row-start-1 row-end-1 z-10">
-            <p className="text-neutral-600 text-center mb-4 sm:mb-6 text-2xl sm:text-3xl md:text-4xl lg:text-5xl font-bold">
-              Build Websites with AI
-            </p>
-            <p className="text-lg text-neutral-500 text-center mb-8 max-w-2xl mx-auto">
-              Transform your ideas into stunning, professional websites in seconds. 
-              No coding required. Just describe what you want and watch it come to life.
-              {/* Vercel auto-deploy trigger - updated deployment info */}
-            </p>
+        <div className="relative">
+          {/* Background Elements */}
+          <div className="absolute inset-0 bg-gradient-to-br from-primary/5 via-purple-500/5 to-blue-500/5 rounded-3xl" />
+          <div className="absolute inset-0 bg-[radial-gradient(circle_at_30%_20%,rgba(120,119,198,0.1),transparent_50%)]" />
+          <div className="absolute inset-0 bg-[radial-gradient(circle_at_70%_80%,rgba(139,92,246,0.1),transparent_50%)]" />
+          
+          <div className="relative w-full max-w-4xl px-4 sm:px-6 lg:px-8 mx-auto flex flex-col items-center pt-16 sm:pt-20 md:pt-24 lg:pt-32 pb-8">
+            <div className="text-center space-y-6 animate-fade-in">
+              <h1 className="text-4xl sm:text-5xl md:text-6xl lg:text-7xl font-bold tracking-tight" aria-label="Build Websites with AI Magic">
+                <span className="block">Build Websites</span>
+                <span className="block gradient-text" aria-hidden="true">with AI Magic</span>
+              </h1>
+              <p className="text-lg sm:text-xl md:text-2xl text-muted-foreground max-w-3xl mx-auto leading-relaxed animate-slide-up" role="banner">
+                Transform your ideas into stunning, professional websites in seconds. 
+                No coding required. Just describe what you want and watch it come to life with our advanced AI technology.
+              </p>
+            </div>
 
             {/* Credit Balance Banner */}
-            <CreditBalanceBanner />
+            <div className="animate-slide-up">
+              <CreditBalanceBanner />
+            </div>
 
-            <div className="w-full relative my-4 sm:my-5">
-              <div className="relative w-full max-w-full overflow-hidden">
-                <div className="w-full bg-accent rounded-md relative z-10 border transition-colors">
+            <div className="w-full max-w-3xl relative mt-8 mb-8 animate-scale-in">
+              <div className="relative group">
+                <div className="absolute -inset-1 bg-gradient-to-r from-primary/20 to-blue-500/20 rounded-2xl blur opacity-75 group-hover:opacity-100 transition duration-300"></div>
+                <div className="relative bg-white/80 backdrop-blur-lg rounded-xl border border-border/50 shadow-large p-2">
                   <PromptInput
                     leftSlot={
-                      <div className="flex flex-col sm:flex-row items-start sm:items-center gap-2 sm:gap-1 w-full sm:w-auto">
+                      <div className="flex flex-col sm:flex-row items-start sm:items-center gap-3 w-full sm:w-auto p-2">
                         <FrameworkSelector value={framework} onChange={setFramework} />
                         <ModelSelector value={model as any} onChange={setModel as any} />
                       </div>
@@ -200,41 +210,73 @@ function HomeContent() {
                     value={prompt}
                     onValueChange={setPrompt}
                     onSubmit={handleSubmit}
-                    className="relative z-10 border-none bg-transparent shadow-none focus-within:border-gray-400 focus-within:ring-1 focus-within:ring-gray-200 transition-all duration-200 ease-in-out"
+                    className="border-none bg-transparent shadow-none focus-within:ring-0 focus-within:border-0"
                   >
                     <PromptInputTextareaWithTypingAnimation />
                     <PromptInputActions>
                       <Button
-                        variant={"ghost"}
-                        size="sm"
+                        variant="gradient"
+                        size="lg"
                         onClick={handleSubmit}
                         disabled={isLoading || !prompt.trim()}
-                        className="h-8 sm:h-7 text-xs w-full sm:w-auto"
+                        className="w-full sm:w-auto shadow-large"
+                        aria-label={isLoading ? "Creating your website..." : "Build website with AI"}
+                        aria-describedby="build-website-description"
                       >
-                        <span className="hidden sm:inline">Build Website ⏎</span>
-                        <span className="sm:hidden">Build Website ⏎</span>
+                        <span className="flex items-center gap-2">
+                          {isLoading ? (
+                            <>
+                              <div 
+                                className="w-4 h-4 border-2 border-white/30 border-t-white rounded-full animate-spin" 
+                                aria-hidden="true"
+                              />
+                              <span aria-live="polite">Creating...</span>
+                            </>
+                          ) : (
+                            <>
+                              <span aria-hidden="true">✨</span> Build Website
+                              <span className="hidden sm:inline" aria-hidden="true">⏎</span>
+                            </>
+                          )}
+                        </span>
                       </Button>
+                      <div id="build-website-description" className="sr-only">
+                        Click to generate a website based on your description using AI
+                      </div>
                     </PromptInputActions>
                   </PromptInput>
                 </div>
               </div>
             </div>
-            <Examples setPrompt={setPrompt} />
-            <div className="mt-6 sm:mt-8 mb-12 sm:mb-16">
-              <div className="text-center">
-                <p className="text-sm text-gray-500 mb-4">
+            
+            <div className="animate-slide-up">
+              <Examples setPrompt={setPrompt} />
+            </div>
+            
+            <div className="mt-12 mb-16 animate-fade-in">
+              <div className="text-center space-y-6">
+                <p className="text-base text-muted-foreground font-medium">
                   Trusted by thousands of creators worldwide
                 </p>
-                <div className="flex justify-center space-x-6 text-xs text-gray-400">
-                  <span>⚡ Lightning Fast</span>
-                  <span>🎨 Beautiful Design</span>
-                  <span>🔒 Secure & Reliable</span>
+                <div className="flex flex-wrap justify-center gap-4 md:gap-6 text-sm text-muted-foreground">
+                  <div className="flex items-center gap-2 bg-white/60 backdrop-blur-sm px-4 py-3 rounded-full shadow-soft hover:shadow-medium transition-all duration-200 animate-stagger-1">
+                    <span className="text-lg" aria-hidden="true">⚡</span>
+                    <span className="font-medium">Lightning Fast</span>
+                  </div>
+                  <div className="flex items-center gap-2 bg-white/60 backdrop-blur-sm px-4 py-3 rounded-full shadow-soft hover:shadow-medium transition-all duration-200 animate-stagger-2">
+                    <span className="text-lg" aria-hidden="true">🎨</span>
+                    <span className="font-medium">Beautiful Design</span>
+                  </div>
+                  <div className="flex items-center gap-2 bg-white/60 backdrop-blur-sm px-4 py-3 rounded-full shadow-soft hover:shadow-medium transition-all duration-200 animate-stagger-3">
+                    <span className="text-lg" aria-hidden="true">🔒</span>
+                    <span className="font-medium">Secure & Reliable</span>
+                  </div>
                 </div>
               </div>
             </div>
           </div>
         </div>
-        <div className="border-t py-8 mx-0 sm:-mx-4">
+        <div className="border-t border-border/30 py-12 mx-4 sm:mx-8">
           <UserApps />
         </div>
         <Footer />
