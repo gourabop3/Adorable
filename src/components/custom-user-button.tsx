@@ -39,38 +39,38 @@ export function CustomUserButton() {
       {/* User Button with Dropdown Toggle */}
       <button
         onClick={() => setShowDropdown(!showDropdown)}
-        className="flex items-center gap-2 p-2 rounded-lg hover:bg-gray-100 dark:hover:bg-gray-800 transition-colors"
+        className="flex items-center gap-2 p-2 rounded-md hover:bg-accent transition-colors focus-ring"
       >
         {isAuthenticated ? (
-          <div className="w-8 h-8 bg-blue-500 rounded-full flex items-center justify-center">
-            <span className="text-white font-semibold text-sm">
+          <div className="w-8 h-8 bg-primary rounded-full flex items-center justify-center">
+            <span className="text-primary-foreground font-medium text-sm">
               {billing?.name?.charAt(0) || 'U'}
             </span>
           </div>
         ) : (
-          <div className="w-8 h-8 bg-gray-200 rounded-full flex items-center justify-center">
-            <User className="h-4 w-4 text-gray-600" />
+          <div className="w-8 h-8 bg-secondary rounded-full flex items-center justify-center">
+            <User className="h-4 w-4 text-muted-foreground" />
           </div>
         )}
-        <ChevronDown className="h-4 w-4 text-gray-500" />
+        <ChevronDown className="h-4 w-4 text-muted-foreground" />
       </button>
 
       {/* Dropdown Menu */}
       {showDropdown && (
-        <div className="absolute right-0 top-full mt-2 w-64 bg-white dark:bg-gray-900 border border-gray-200 dark:border-gray-700 rounded-lg shadow-lg z-50">
+        <div className="absolute right-0 top-full mt-2 w-64 bg-background border border-border rounded-lg shadow-lg z-50">
           {isAuthenticated ? (
             <>
               {/* User Info Section */}
-              <div className="p-4 border-b border-gray-200 dark:border-gray-700">
+              <div className="p-4 border-b border-border">
                 <div className="flex items-center gap-3">
-                  <div className="w-10 h-10 bg-blue-500 rounded-full flex items-center justify-center text-white font-semibold">
+                  <div className="w-10 h-10 bg-primary rounded-full flex items-center justify-center text-primary-foreground font-medium">
                     {billing?.name?.charAt(0) || 'U'}
                   </div>
                   <div className="flex-1 min-w-0">
-                    <p className="font-semibold text-gray-900 dark:text-white truncate">
+                    <p className="font-medium text-foreground truncate">
                       {billing?.name || 'User'}
                     </p>
-                    <p className="text-sm text-gray-500 dark:text-gray-400 truncate">
+                    <p className="text-sm text-muted-foreground truncate">
                       {billing?.email || 'user@example.com'}
                     </p>
                   </div>
@@ -79,13 +79,13 @@ export function CustomUserButton() {
                 {/* Credit Display */}
                 <div className="mt-3 flex items-center justify-between">
                   <div className="flex items-center gap-2">
-                    <Coins className="h-4 w-4 text-yellow-500" />
-                    <span className="text-sm font-medium">
+                    <Coins className="h-4 w-4 text-foreground" />
+                    <span className="text-sm font-medium text-foreground">
                       {billing?.credits || 0} credits
                     </span>
                   </div>
                   {isPro && (
-                    <div className="flex items-center gap-1 text-xs text-purple-600">
+                    <div className="flex items-center gap-1 text-xs text-foreground">
                       <Crown className="h-3 w-3" />
                       <span>Pro</span>
                     </div>

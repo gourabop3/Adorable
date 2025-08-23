@@ -154,7 +154,7 @@ function HomeContent() {
   return (
     <QueryClientProvider client={queryClient}>
       <Navigation />
-      <main className="min-h-screen p-4 relative">
+      <main className="min-h-screen bg-background">
 
         {showPaymentSuccess && (
           <PaymentSuccessBanner
@@ -172,70 +172,83 @@ function HomeContent() {
           />
         )}
         
-        <div>
-          <div className="w-full max-w-lg px-4 sm:px-0 mx-auto flex flex-col items-center mt-12 sm:mt-16 md:mt-24 lg:mt-32 col-start-1 col-end-1 row-start-1 row-end-1 z-10">
-            <p className="text-neutral-600 text-center mb-4 sm:mb-6 text-2xl sm:text-3xl md:text-4xl lg:text-5xl font-bold">
-              Build Websites with AI
-            </p>
-            <p className="text-lg text-neutral-500 text-center mb-8 max-w-2xl mx-auto">
-              Transform your ideas into stunning, professional websites in seconds. 
-              No coding required. Just describe what you want and watch it come to life.
-              {/* Vercel auto-deploy trigger - updated deployment info */}
+        <div className="mx-auto max-w-4xl px-4 sm:px-6 lg:px-8">
+          <div className="flex flex-col items-center text-center pt-16 sm:pt-20 md:pt-24 lg:pt-32 pb-12">
+            <h1 className="text-4xl sm:text-5xl md:text-6xl font-bold tracking-tight text-foreground max-w-4xl">
+              Build websites with AI
+            </h1>
+            <p className="mt-6 text-lg sm:text-xl text-muted-foreground max-w-2xl leading-relaxed">
+              Transform your ideas into stunning websites in seconds. No coding required.
             </p>
 
             {/* Credit Balance Banner */}
-            <CreditBalanceBanner />
+            <div className="mt-8">
+              <CreditBalanceBanner />
+            </div>
 
-            <div className="w-full relative my-4 sm:my-5">
-              <div className="relative w-full max-w-full overflow-hidden">
-                <div className="w-full bg-accent rounded-md relative z-10 border transition-colors">
-                  <PromptInput
-                    leftSlot={
-                      <div className="flex flex-col sm:flex-row items-start sm:items-center gap-2 sm:gap-1 w-full sm:w-auto">
-                        <FrameworkSelector value={framework} onChange={setFramework} />
-                        <ModelSelector value={model as any} onChange={setModel as any} />
-                      </div>
-                    }
-                    isLoading={isLoading}
-                    value={prompt}
-                    onValueChange={setPrompt}
-                    onSubmit={handleSubmit}
-                    className="relative z-10 border-none bg-transparent shadow-none focus-within:border-gray-400 focus-within:ring-1 focus-within:ring-gray-200 transition-all duration-200 ease-in-out"
-                  >
-                    <PromptInputTextareaWithTypingAnimation />
-                    <PromptInputActions>
-                      <Button
-                        variant={"ghost"}
-                        size="sm"
-                        onClick={handleSubmit}
-                        disabled={isLoading || !prompt.trim()}
-                        className="h-8 sm:h-7 text-xs w-full sm:w-auto"
-                      >
-                        <span className="hidden sm:inline">Build Website ⏎</span>
-                        <span className="sm:hidden">Build Website ⏎</span>
-                      </Button>
-                    </PromptInputActions>
-                  </PromptInput>
-                </div>
+            <div className="w-full max-w-3xl mt-8 mb-8">
+              <div className="rounded-lg border border-border bg-background p-3">
+                <PromptInput
+                  leftSlot={
+                    <div className="flex flex-col sm:flex-row items-start sm:items-center gap-2 w-full sm:w-auto">
+                      <FrameworkSelector value={framework} onChange={setFramework} />
+                      <ModelSelector value={model as any} onChange={setModel as any} />
+                    </div>
+                  }
+                  isLoading={isLoading}
+                  value={prompt}
+                  onValueChange={setPrompt}
+                  onSubmit={handleSubmit}
+                  className="border-none bg-transparent shadow-none focus-within:ring-0 focus-within:border-0 p-0"
+                >
+                  <PromptInputTextareaWithTypingAnimation />
+                  <PromptInputActions>
+                    <Button
+                      variant="default"
+                      size="sm"
+                      onClick={handleSubmit}
+                      disabled={isLoading || !prompt.trim()}
+                      className="w-full sm:w-auto"
+                      aria-label={isLoading ? "Creating your website..." : "Build website with AI"}
+                      aria-describedby="build-website-description"
+                    >
+                      {isLoading ? (
+                        <>
+                          <div 
+                            className="w-4 h-4 border-2 border-current/30 border-t-current rounded-full animate-spin mr-2" 
+                            aria-hidden="true"
+                          />
+                          <span aria-live="polite">Creating...</span>
+                        </>
+                      ) : (
+                        <>
+                          Build Website
+                        </>
+                      )}
+                    </Button>
+                    <div id="build-website-description" className="sr-only">
+                      Click to generate a website based on your description using AI
+                    </div>
+                  </PromptInputActions>
+                </PromptInput>
               </div>
             </div>
+            
             <Examples setPrompt={setPrompt} />
-            <div className="mt-6 sm:mt-8 mb-12 sm:mb-16">
+            
+            <div className="mt-16 mb-16">
               <div className="text-center">
-                <p className="text-sm text-gray-500 mb-4">
+                <p className="text-sm text-muted-foreground">
                   Trusted by thousands of creators worldwide
                 </p>
-                <div className="flex justify-center space-x-6 text-xs text-gray-400">
-                  <span>⚡ Lightning Fast</span>
-                  <span>🎨 Beautiful Design</span>
-                  <span>🔒 Secure & Reliable</span>
-                </div>
               </div>
             </div>
           </div>
         </div>
-        <div className="border-t py-8 mx-0 sm:-mx-4">
-          <UserApps />
+        <div className="border-t border-border py-12">
+          <div className="mx-auto max-w-6xl px-4 sm:px-6 lg:px-8">
+            <UserApps />
+          </div>
         </div>
         <Footer />
       </main>

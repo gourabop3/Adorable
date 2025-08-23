@@ -20,11 +20,11 @@ export function ExampleButton({
     <Button
       variant="outline"
       size="sm"
-      className={`hover:bg-gray-100 hover:border-gray-300 active:scale-95 transition-all duration-200 rounded-full ${
-        className || ""
-      }`}
+      className={`hover:bg-accent focus-ring ${className || ""}`}
       onClick={() => onClick(promptText)}
       type="button"
+      aria-label={`Use example prompt: ${promptText}`}
+      title={promptText}
     >
       {text}
     </Button>

@@ -31,7 +31,7 @@ const PromptInputContext = createContext<
   isLoading: false,
   value: "",
   setValue: () => {},
-  maxHeight: 240,
+  maxHeight: 120,
   onSubmit: undefined,
   disabled: false,
   leftSlot: undefined,
@@ -59,7 +59,7 @@ type PromptInputProps = {
 function PromptInput({
   className,
   isLoading = false,
-  maxHeight = 240,
+  maxHeight = 120,
   value,
   onValueChange,
   onSubmit,
@@ -136,21 +136,21 @@ function PromptInputTextarea({
   };
 
   return (
-    <Textarea
-      ref={textareaRef}
-      value={value}
-      onChange={(e) => setValue(e.target.value)}
-      onKeyDown={handleKeyDown}
-      onFocus={props.onFocus}
-      onBlur={props.onBlur}
-      className={cn(
-        "text-primary min-h-[44px] w-full resize-none border-none bg-transparent shadow-none outline-none focus-visible:ring-0 focus-visible:ring-offset-0 text-base sm:text-sm",
-        className,
-      )}
-      rows={1}
-      disabled={disabled}
-      {...props}
-    />
+          <Textarea
+        ref={textareaRef}
+        value={value}
+        onChange={(e) => setValue(e.target.value)}
+        onKeyDown={handleKeyDown}
+        onFocus={props.onFocus}
+        onBlur={props.onBlur}
+        className={cn(
+          "text-primary min-h-[36px] w-full resize-none border-none bg-transparent shadow-none outline-none focus-visible:ring-0 focus-visible:ring-offset-0 text-sm placeholder:text-sm",
+          className,
+        )}
+        rows={1}
+        disabled={disabled}
+        {...props}
+      />
   );
 }
 
@@ -165,10 +165,10 @@ function PromptInputActions({
 
   return (
     <div
-      className={cn("flex items-center justify-between w-full flex-wrap gap-2 sm:flex-nowrap", className)}
+      className={cn("flex items-center justify-between w-full flex-wrap gap-2 sm:flex-nowrap mt-2", className)}
       {...props}
     >
-      <div className="self-end pb-1 order-1 sm:order-none">{leftSlot}</div>
+      <div className="self-end order-1 sm:order-none">{leftSlot}</div>
       <div className="flex items-center gap-2 order-2 sm:order-none">{children}</div>
     </div>
   );
