@@ -154,7 +154,7 @@ function HomeContent() {
   return (
     <QueryClientProvider client={queryClient}>
       <Navigation />
-      <main className="min-h-screen relative overflow-hidden bg-gradient-to-br from-background via-primary/[0.02] to-blue-500/[0.02]">
+      <main className="min-h-screen bg-background">
 
         {showPaymentSuccess && (
           <PaymentSuccessBanner
@@ -172,112 +172,83 @@ function HomeContent() {
           />
         )}
         
-        <div className="relative">
-          {/* Background Elements */}
-          <div className="absolute inset-0 bg-gradient-to-br from-primary/5 via-purple-500/5 to-blue-500/5 rounded-3xl" />
-          <div className="absolute inset-0 bg-[radial-gradient(circle_at_30%_20%,rgba(120,119,198,0.1),transparent_50%)]" />
-          <div className="absolute inset-0 bg-[radial-gradient(circle_at_70%_80%,rgba(139,92,246,0.1),transparent_50%)]" />
-          
-          <div className="relative w-full max-w-4xl px-4 sm:px-6 lg:px-8 mx-auto flex flex-col items-center pt-16 sm:pt-20 md:pt-24 lg:pt-32 pb-8">
-            <div className="text-center space-y-6 animate-fade-in">
-              <h1 className="text-4xl sm:text-5xl md:text-6xl lg:text-7xl font-bold tracking-tight" aria-label="Build Websites with AI Magic">
-                <span className="block">Build Websites</span>
-                <span className="block gradient-text" aria-hidden="true">with AI Magic</span>
-              </h1>
-              <p className="text-lg sm:text-xl md:text-2xl text-muted-foreground max-w-3xl mx-auto leading-relaxed animate-slide-up" role="banner">
-                Transform your ideas into stunning, professional websites in seconds. 
-                No coding required. Just describe what you want and watch it come to life with our advanced AI technology.
-              </p>
-            </div>
+        <div className="mx-auto max-w-4xl px-4 sm:px-6 lg:px-8">
+          <div className="flex flex-col items-center text-center pt-16 sm:pt-20 md:pt-24 lg:pt-32 pb-12">
+            <h1 className="text-4xl sm:text-5xl md:text-6xl font-bold tracking-tight text-foreground max-w-4xl">
+              Build websites with AI
+            </h1>
+            <p className="mt-6 text-lg sm:text-xl text-muted-foreground max-w-2xl leading-relaxed">
+              Transform your ideas into stunning websites in seconds. No coding required.
+            </p>
 
             {/* Credit Balance Banner */}
-            <div className="animate-slide-up">
+            <div className="mt-8">
               <CreditBalanceBanner />
             </div>
 
-            <div className="w-full max-w-3xl relative mt-8 mb-8 animate-scale-in">
-              <div className="relative group">
-                <div className="absolute -inset-1 bg-gradient-to-r from-primary/20 to-blue-500/20 rounded-2xl blur opacity-75 group-hover:opacity-100 transition duration-300"></div>
-                <div className="relative bg-white/80 backdrop-blur-lg rounded-xl border border-border/50 shadow-large p-2">
-                  <PromptInput
-                    leftSlot={
-                      <div className="flex flex-col sm:flex-row items-start sm:items-center gap-3 w-full sm:w-auto p-2">
-                        <FrameworkSelector value={framework} onChange={setFramework} />
-                        <ModelSelector value={model as any} onChange={setModel as any} />
-                      </div>
-                    }
-                    isLoading={isLoading}
-                    value={prompt}
-                    onValueChange={setPrompt}
-                    onSubmit={handleSubmit}
-                    className="border-none bg-transparent shadow-none focus-within:ring-0 focus-within:border-0"
-                  >
-                    <PromptInputTextareaWithTypingAnimation />
-                    <PromptInputActions>
-                      <Button
-                        variant="gradient"
-                        size="lg"
-                        onClick={handleSubmit}
-                        disabled={isLoading || !prompt.trim()}
-                        className="w-full sm:w-auto shadow-large"
-                        aria-label={isLoading ? "Creating your website..." : "Build website with AI"}
-                        aria-describedby="build-website-description"
-                      >
-                        <span className="flex items-center gap-2">
-                          {isLoading ? (
-                            <>
-                              <div 
-                                className="w-4 h-4 border-2 border-white/30 border-t-white rounded-full animate-spin" 
-                                aria-hidden="true"
-                              />
-                              <span aria-live="polite">Creating...</span>
-                            </>
-                          ) : (
-                            <>
-                              <span aria-hidden="true">✨</span> Build Website
-                              <span className="hidden sm:inline" aria-hidden="true">⏎</span>
-                            </>
-                          )}
-                        </span>
-                      </Button>
-                      <div id="build-website-description" className="sr-only">
-                        Click to generate a website based on your description using AI
-                      </div>
-                    </PromptInputActions>
-                  </PromptInput>
-                </div>
+            <div className="w-full max-w-3xl mt-8 mb-8">
+              <div className="rounded-lg border border-border bg-background p-4">
+                <PromptInput
+                  leftSlot={
+                    <div className="flex flex-col sm:flex-row items-start sm:items-center gap-2 w-full sm:w-auto">
+                      <FrameworkSelector value={framework} onChange={setFramework} />
+                      <ModelSelector value={model as any} onChange={setModel as any} />
+                    </div>
+                  }
+                  isLoading={isLoading}
+                  value={prompt}
+                  onValueChange={setPrompt}
+                  onSubmit={handleSubmit}
+                  className="border-none bg-transparent shadow-none focus-within:ring-0 focus-within:border-0"
+                >
+                  <PromptInputTextareaWithTypingAnimation />
+                  <PromptInputActions>
+                    <Button
+                      variant="default"
+                      size="default"
+                      onClick={handleSubmit}
+                      disabled={isLoading || !prompt.trim()}
+                      className="w-full sm:w-auto"
+                      aria-label={isLoading ? "Creating your website..." : "Build website with AI"}
+                      aria-describedby="build-website-description"
+                    >
+                      {isLoading ? (
+                        <>
+                          <div 
+                            className="w-4 h-4 border-2 border-current/30 border-t-current rounded-full animate-spin mr-2" 
+                            aria-hidden="true"
+                          />
+                          <span aria-live="polite">Creating...</span>
+                        </>
+                      ) : (
+                        <>
+                          Build Website
+                        </>
+                      )}
+                    </Button>
+                    <div id="build-website-description" className="sr-only">
+                      Click to generate a website based on your description using AI
+                    </div>
+                  </PromptInputActions>
+                </PromptInput>
               </div>
             </div>
             
-            <div className="animate-slide-up">
-              <Examples setPrompt={setPrompt} />
-            </div>
+            <Examples setPrompt={setPrompt} />
             
-            <div className="mt-12 mb-16 animate-fade-in">
-              <div className="text-center space-y-6">
-                <p className="text-base text-muted-foreground font-medium">
+            <div className="mt-16 mb-16">
+              <div className="text-center">
+                <p className="text-sm text-muted-foreground">
                   Trusted by thousands of creators worldwide
                 </p>
-                <div className="flex flex-wrap justify-center gap-4 md:gap-6 text-sm text-muted-foreground">
-                  <div className="flex items-center gap-2 bg-white/60 backdrop-blur-sm px-4 py-3 rounded-full shadow-soft hover:shadow-medium transition-all duration-200 animate-stagger-1">
-                    <span className="text-lg" aria-hidden="true">⚡</span>
-                    <span className="font-medium">Lightning Fast</span>
-                  </div>
-                  <div className="flex items-center gap-2 bg-white/60 backdrop-blur-sm px-4 py-3 rounded-full shadow-soft hover:shadow-medium transition-all duration-200 animate-stagger-2">
-                    <span className="text-lg" aria-hidden="true">🎨</span>
-                    <span className="font-medium">Beautiful Design</span>
-                  </div>
-                  <div className="flex items-center gap-2 bg-white/60 backdrop-blur-sm px-4 py-3 rounded-full shadow-soft hover:shadow-medium transition-all duration-200 animate-stagger-3">
-                    <span className="text-lg" aria-hidden="true">🔒</span>
-                    <span className="font-medium">Secure & Reliable</span>
-                  </div>
-                </div>
               </div>
             </div>
           </div>
         </div>
-        <div className="border-t border-border/30 py-12 mx-4 sm:mx-8">
-          <UserApps />
+        <div className="border-t border-border py-12">
+          <div className="mx-auto max-w-6xl px-4 sm:px-6 lg:px-8">
+            <UserApps />
+          </div>
         </div>
         <Footer />
       </main>
