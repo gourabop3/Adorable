@@ -19,9 +19,13 @@ import {
   LogOut,
   User
 } from "lucide-react";
+import { FrameworkSelector } from "@/components/framework-selector";
+import { ModelSelector, type SupportedModelId } from "@/components/model-selector";
 
 export default function Home() {
   const [appDescription, setAppDescription] = useState("");
+  const [framework, setFramework] = useState("nextjs");
+  const [model, setModel] = useState<SupportedModelId>("gemini-2.5-pro");
   const [isSubmitting, setIsSubmitting] = useState(false);
 
   const handleSubmit = async () => {
@@ -124,6 +128,12 @@ export default function Home() {
         {/* App Description Input */}
         <div className="max-w-3xl mx-auto mb-16">
           <div className="relative bg-white rounded-lg border border-gray-200 p-6 shadow-sm">
+            {/* Framework and Model Selectors */}
+            <div className="flex flex-col sm:flex-row items-start sm:items-center gap-2 mb-4">
+              <FrameworkSelector value={framework} onChange={setFramework} />
+              <ModelSelector value={model} onChange={setModel} />
+            </div>
+            
             <textarea
               value={appDescription}
               onChange={(e) => setAppDescription(e.target.value)}
