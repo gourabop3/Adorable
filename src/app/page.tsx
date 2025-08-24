@@ -15,6 +15,7 @@ import { ModelSelector } from "@/components/model-selector";
 import { CreditBalanceBanner } from "@/components/credit-balance-banner";
 import { Footer } from "@/components/footer";
 import { Navigation } from "@/components/navigation";
+import { RorkNavigation } from "@/components/rork-navigation";
 
 const queryClient = new QueryClient();
 
@@ -259,6 +260,7 @@ function HomeContent() {
 export default function Home() {
   return (
     <BillingProvider>
+      <RorkNavigation />
       <HomeContent />
     </BillingProvider>
   );
