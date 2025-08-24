@@ -175,7 +175,7 @@ function HomeContent() {
         <div className="mx-auto max-w-4xl px-4 sm:px-6 lg:px-8">
           <div className="flex flex-col items-center text-center pt-16 sm:pt-20 md:pt-24 lg:pt-32 pb-12">
             <h1 className="text-4xl sm:text-5xl md:text-6xl font-bold tracking-tight text-foreground max-w-4xl">
-              Build websites with AI
+              Build amazing websites with AI
             </h1>
             <p className="mt-6 text-lg sm:text-xl text-muted-foreground max-w-2xl leading-relaxed">
               Transform your ideas into stunning websites in seconds. No coding required.
