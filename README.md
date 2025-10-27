@@ -40,7 +40,7 @@ A modern AI-powered app builder with real-time streaming, beautiful UI generatio
 
 ---
 
-*Last updated: Vercel auto-deploy trigger* 🚀
+*Last updated: Vercel auto-deploy trigger - $(date)* 🚀
 
 ## OpenAI-compatible provider (ChatAnywhere)
 
